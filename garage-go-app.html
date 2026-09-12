@@ -4,38 +4,41 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Pure Minimalist Studio (Stark & Modern) — 60 / 30 / 10 */
   :root{
-    --ground:#F5E6CC;            /* Warm Beige */
-    --card:#FFFDF7;
-    --ink:#2E2B25;              /* warm charcoal (headings) */
-    --ink2:#4A4A4A;             /* Slate Grey (body) */
-    --muted:#8A8478;
-    --faint:#B3AC9C;
-    --line:#E7DCC4;
-    --line2:#DED2B8;
-    --forest:#2D4F1E;           /* Forest Green */
-    --forest-d:#24401A;
-    --forest-l:#3D6329;
-    --forest-t:#EAF0E4;         /* light forest tint */
-    --forest-t2:#EEF3E7;
-    --terra:#E27D60;            /* Terracotta */
-    --terra-d:#CE6A4E;
-    --terra-t:#FBEDE6;
-    --slate:#4A4A4A;            /* Slate Grey */
-    --slate-l:#6E6E6E;
+    --ground:#FFFFFF;          /* Pure White — 60% canvas */
+    --card:#FFFFFF;
+    --ink:#5C3A21;             /* Warm Espresso — headings / strong text */
+    --ink2:#5C3A21;
+    --muted:#7A6F66;           /* Taupe Gray — 30% labels / secondary */
+    --faint:#A79D93;           /* lighter taupe — placeholders */
+    --line:#EAE5DF;            /* hairline border (taupe, low) */
+    --line2:#E0D9D1;
+    --forest:#5C3A21;          /* Warm Espresso — 10% primary/active */
+    --forest-d:#4A2E19;
+    --forest-l:#5C3A21;
+    --forest-t:rgba(92,58,33,.08);   /* espresso wash (active/badge) */
+    --forest-t2:rgba(92,58,33,.06);
+    --terra:#5C3A21;           /* single accent = espresso */
+    --terra-d:#4A2E19;
+    --terra-t:rgba(92,58,33,.08);
+    --surface:#5C3A21;         /* espresso dark surface (rare, branded) */
+    --on-dark:#FFFFFF;
+    --slate:#7A6F66;
+    --slate-l:#7A6F66;
     font-family:Inter,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
-    background:#2A2A28;
+    background:#ECE8E2;
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 12px;
-    background-image:radial-gradient(circle at 50% 0,#3a3a34 0,#222220 70%);
+    background-image:radial-gradient(circle at 50% 0,#F4F1EC 0,#E4DED6 72%);
   }
   .phone{
     width:390px;height:844px;border-radius:46px;position:relative;
     background:var(--ground);overflow:hidden;color:var(--ink);
-    box-shadow:0 40px 90px rgba(0,0,0,.4),0 0 0 11px #16130F,0 0 0 12px #2A2620;
+    box-shadow:0 40px 90px rgba(46,34,20,.28),0 0 0 11px #241812,0 0 0 12px #5C3A21;
   }
   .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:34px;border-radius:22px;background:#000;z-index:60}
   .statusbar{position:absolute;top:0;left:0;right:0;height:52px;z-index:55;display:flex;align-items:center;justify-content:space-between;padding:19px 30px 0;pointer-events:none}
@@ -51,22 +54,34 @@
   @keyframes ggRise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
   .gg-rise{animation:ggRise .34s cubic-bezier(.22,.68,0,1) both}
   @keyframes ggPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
-  .gg-t{transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
-  .gg-t:active{transform:scale(.975)}
+  @keyframes ggFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes ggRiseIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+  .gg-float{animation:ggFloat 4.6s ease-in-out infinite}
+  .gg-in{animation:ggRiseIn .55s cubic-bezier(.22,.68,0,1) both}
+  /* Smooth hover/press interactions (as in the first Claude design) */
+  .gg-t{transition:transform .2s cubic-bezier(.22,.68,0,1),box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+  .gg-t:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(92,58,33,.12)}
+  .gg-t:active{transform:translateY(0) scale(.98)}
+  .gg-press{transition:transform .2s cubic-bezier(.22,.68,0,1),background .2s ease,color .2s ease,border-color .2s ease}
+  .gg-press:hover{transform:translateY(-1px)}
+  .gg-press:active{transform:scale(.98)}
   button{font-family:inherit}
   input,textarea{font-family:inherit}
   :focus-visible{outline:2.5px solid var(--forest);outline-offset:2px;border-radius:8px}
-  @media (prefers-reduced-motion:reduce){.gg-rise{animation:none}.gg-t{transition:none}}
+  @media (prefers-reduced-motion:reduce){.gg-rise,.gg-in,.gg-float{animation:none}.gg-t,.gg-press{transition:none}}
 
   .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:40;
-    padding:9px 14px calc(9px + env(safe-area-inset-bottom));
-    background:rgba(245,230,204,.86);backdrop-filter:blur(18px) saturate(150%);
-    -webkit-backdrop-filter:blur(18px) saturate(150%);
-    border-top:1px solid var(--line);display:flex;gap:4px}
-  .tab{flex:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 4px;color:var(--muted)}
-  .tab .lab{font-size:10px;font-weight:600}
+    padding:10px 10px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(160%);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);
+    border-top:1px solid var(--line);display:flex;gap:2px}
+  .tab{flex:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0 3px;color:var(--muted);transition:color .2s ease}
+  .tab .ico{display:grid;place-items:center;transition:transform .2s ease}
+  .tab:hover .ico{transform:translateY(-2px)}
+  .tab .lab{font-size:10.5px;font-weight:600}
+  .tab .dot{width:5px;height:5px;border-radius:99px;background:var(--forest);opacity:0;transition:opacity .2s ease}
   .tab.on{color:var(--forest)}
-  .tab .dot{width:5px;height:5px;border-radius:99px;background:var(--forest);opacity:0}
+  .tab.on .lab{font-weight:700}
   .tab.on .dot{opacity:1}
   .homeind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:99px;background:rgba(0,0,0,.2);z-index:70;pointer-events:none}
 </style>
@@ -114,6 +129,8 @@ const P = {
   shield:'<path d="M12 3.5 19 6v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-2.5z"/><path d="m9 12 2 2 4-4"/>',
   birr:'<path d="M9 5.5h4.2a3.4 3.4 0 0 1 0 6.8H9zM9 12.3h4.6a3.6 3.6 0 0 1 0 6.2H9zM9 3.2v17.6"/>',
   phone:'<path d="M6 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/>',
+  garage:'<path d="M3.2 10.4 12 4.2l8.8 6.2"/><path d="M5.3 9.8V20h13.4V9.8"/><rect x="8" y="13.4" width="8" height="6.6" rx="1"/><path d="M8 16.7h8"/>',
+  arrowR:'<path d="M5 12h14M13 6l6 6-6 6"/>',
   navsig:'<path d="M4 20l7-16 3 8 3-2 3 10z"/>'
 };
 function ic(name,size,color,sw){
@@ -122,26 +139,26 @@ function ic(name,size,color,sw){
 }
 document.getElementById('sbicons').innerHTML =
   `<span style="color:var(--ink)">${ic('navsig',15,'var(--ink)',2.2)}</span>`+
-  `<svg width="16" height="12" viewBox="0 0 24 24" fill="#2E2B25" aria-hidden="true"><path d="M12 6.5c2.6 0 5 1 6.8 2.7l1.2-1.3A11 11 0 0 0 12 4.5 11 11 0 0 0 4 7.9L5.2 9.2A9.4 9.4 0 0 1 12 6.5zM12 11c1.4 0 2.7.5 3.6 1.5l1.2-1.3A7 7 0 0 0 12 9a7 7 0 0 0-4.8 2.2l1.2 1.3A5 5 0 0 1 12 11z"/><circle cx="12" cy="15.5" r="1.6"/></svg>`+
-  `<svg width="24" height="12" viewBox="0 0 26 13" aria-hidden="true"><rect x=".5" y=".5" width="21" height="12" rx="3.2" fill="none" stroke="#2E2B25" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#2E2B25"/><path d="M23.5 4.5v4c.8-.3 1.3-1 1.3-2s-.5-1.7-1.3-2z" fill="#2E2B25" fill-opacity=".4"/></svg>`;
+  `<svg width="16" height="12" viewBox="0 0 24 24" fill="#5C3A21" aria-hidden="true"><path d="M12 6.5c2.6 0 5 1 6.8 2.7l1.2-1.3A11 11 0 0 0 12 4.5 11 11 0 0 0 4 7.9L5.2 9.2A9.4 9.4 0 0 1 12 6.5zM12 11c1.4 0 2.7.5 3.6 1.5l1.2-1.3A7 7 0 0 0 12 9a7 7 0 0 0-4.8 2.2l1.2 1.3A5 5 0 0 1 12 11z"/><circle cx="12" cy="15.5" r="1.6"/></svg>`+
+  `<svg width="24" height="12" viewBox="0 0 26 13" aria-hidden="true"><rect x=".5" y=".5" width="21" height="12" rx="3.2" fill="none" stroke="#5C3A21" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#5C3A21"/><path d="M23.5 4.5v4c.8-.3 1.3-1 1.3-2s-.5-1.7-1.3-2z" fill="#5C3A21" fill-opacity=".4"/></svg>`;
 
 const GOOGLE = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-2 3.2-4.9 3.2-7.9z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.7c-1 .7-2.3 1.1-3.6 1.1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M6 14.4a6.6 6.6 0 0 1 0-4.2V7.4H2.3a11 11 0 0 0 0 9.8L6 14.4z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1A11 11 0 0 0 12 1 11 11 0 0 0 2.3 7.4L6 10.2c.9-2.6 3.2-4.8 6-4.8z"/></svg>`;
 
 /* ─────────── PALETTE (JS) ─────────── */
-const FOREST='#2D4F1E',FOREST_L='#3D6329',TERRA='#E27D60',SLATE='#4A4A4A',DARK='#2E2B25',MUTE='#8A8478';
+const FOREST='#5C3A21',FOREST_L='#5C3A21',TERRA='#5C3A21',SLATE='#5C3A21',DARK='#5C3A21',MUTE='#847A71';
 
 /* ─────────── DATA ─────────── */
 const garages=[
   {name:'Bole Auto Care',area:'Bole',dist:'1.2 km',rating:'4.9',reviews:214,from:'650',hours:'Open · closes 8 PM',openFg:FOREST,tags:['Engine','Diagnostics','AC']},
   {name:'Habesha Motors',area:'Kazanchis',dist:'2.8 km',rating:'4.7',reviews:168,from:'500',hours:'Open · closes 7 PM',openFg:FOREST,tags:['Electrical','Body work']},
   {name:'Gerji Garage & Tyre',area:'Gerji',dist:'4.1 km',rating:'4.6',reviews:97,from:'420',hours:'Open · closes 9 PM',openFg:FOREST,tags:['Tyres','Suspension']},
-  {name:'Summit Car Clinic',area:'Summit',dist:'5.6 km',rating:'4.5',reviews:143,from:'700',hours:'Opens 8 AM tomorrow',openFg:'#B45309',tags:['Engine','Gearbox']},
+  {name:'Summit Car Clinic',area:'Summit',dist:'5.6 km',rating:'4.5',reviews:143,from:'700',hours:'Opens 8 AM tomorrow',openFg:'#A15C4F',tags:['Engine','Gearbox']},
 ];
 const quick=[
-  {label:'Book garage',icon:'car',chip:FOREST,ink:'#fff',shadow:'rgba(45,79,30,.28)',go:'search'},
-  {label:'Find mechanic',icon:'users',chip:SLATE,ink:'#fff',shadow:'rgba(74,74,74,.22)',go:'emergency'},
-  {label:'Emergency',icon:'bolt',chip:TERRA,ink:'#fff',shadow:'rgba(226,125,96,.32)',go:'emergency'},
-  {label:'Towing',icon:'truck',chip:FOREST_L,ink:'#fff',shadow:'rgba(61,99,41,.3)',go:'roadside'},
+  {label:'Book garage',icon:'car',chip:FOREST,ink:'#fff',shadow:'rgba(194,155,116,.28)',go:'search'},
+  {label:'Find mechanic',icon:'users',chip:SLATE,ink:'#fff',shadow:'rgba(58,42,29,.22)',go:'emergency'},
+  {label:'Emergency',icon:'bolt',chip:TERRA,ink:'#fff',shadow:'rgba(194,155,116,.32)',go:'emergency'},
+  {label:'Towing',icon:'truck',chip:FOREST_L,ink:'#fff',shadow:'rgba(194,155,116,.3)',go:'roadside'},
 ];
 const services=[
   {n:'Full engine diagnostics',d:'45–60 min · OBD scan + report',p:'650'},
@@ -157,10 +174,10 @@ const mechanics=[
   {name:'Yonas Girma',phone:'+251 921 76 41 08',area:'CMC · Gerji',exp:'15 yrs',eta:'17 min',dist:'5.0 km',tags:['Gearbox','Diagnostics']},
 ];
 const roadsideOpts=[
-  {t:'Towing',d:'Flatbed or hook',icon:'truck',bg:FOREST,ink:'#fff',chip:'rgba(245,230,204,.2)',cIn:'#F5E6CC'},
-  {t:'Battery jump',d:'Jump or replace',icon:'battery',bg:'#fff',ink:DARK,chip:'#EAF0E4',cIn:FOREST},
-  {t:'Tyre change',d:'Spare or patch',icon:'tire',bg:'#fff',ink:DARK,chip:'#EFE7D5',cIn:SLATE},
-  {t:'Other help',d:'Fuel, lockout, key',icon:'chat',bg:'#FBEDE6',ink:'#9A3412',chip:'#F3CBBB',cIn:'#B14B2E'},
+  {t:'Towing',d:'Flatbed or hook',icon:'truck',bg:FOREST,ink:'#fff',chip:'rgba(253,253,251,.2)',cIn:'#FDFDFB'},
+  {t:'Battery jump',d:'Jump or replace',icon:'battery',bg:'#fff',ink:DARK,chip:'#F1EBE2',cIn:FOREST},
+  {t:'Tyre change',d:'Spare or patch',icon:'tire',bg:'#fff',ink:DARK,chip:'#E6E4E0',cIn:SLATE},
+  {t:'Other help',d:'Fuel, lockout, key',icon:'chat',bg:'#F5ECE3',ink:'#9A3412',chip:'#EBD7CB',cIn:'#5C3A21'},
 ];
 const providers=[
   {name:'Addis Tow 24/7',eta:'14 min',price:'1,800–2,400',rating:'4.8',type:'Flatbed truck'},
@@ -188,7 +205,7 @@ const telebirr=[
 ];
 
 /* ─────────── STATE + HELPERS ─────────── */
-const state={authTab:0,service:1,day:2,slot:1,chip:0,road:0,pw:false,pw2:false};
+const state={authTab:0,service:1,day:2,slot:1,chip:0,road:0,pw:false,pw2:false,otpSent:false,otpSentUp:false,phone:''};
 const el=id=>document.getElementById(id);
 const scr=el('scr');
 function tealBtn(label,go,aria){
@@ -197,52 +214,69 @@ function tealBtn(label,go,aria){
 function backBtn(go,aria){
   return `<button type="button" class="gg-t" onclick="nav('${go}')" aria-label="${aria||'Back'}" style="width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:13px;display:grid;place-items:center;padding:11px;cursor:pointer;color:var(--ink2)">${ic('chevL',18)}</button>`;
 }
-function chipTag(txt,bg,fg){return `<span style="font-size:10.5px;font-weight:600;color:${fg||'#5A564C'};background:${bg||'#EFE7D5'};border-radius:999px;padding:4px 9px;white-space:nowrap">${txt}</span>`;}
+function chipTag(txt,bg,fg){return `<span style="font-size:10.5px;font-weight:600;color:${fg||'#5C3A21'};background:${bg||'#E6E4E0'};border-radius:999px;padding:4px 9px;white-space:nowrap">${txt}</span>`;}
 function garageThumb(w,h,seed){
-  const hues=['#E4E0D6','#E7EBDD','#EFE2D6','#E3E7DD'];
+  const hues=['#F0EDE7','#ECE8E1','#F1EDE6','#EEEAE3'];
   const g=hues[seed%hues.length];
   return `<svg width="${w}" height="${h}" viewBox="0 0 220 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:block">
-    <defs><linearGradient id="gt${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g}"/><stop offset="1" stop-color="#F3ECDD"/></linearGradient></defs>
+    <defs><linearGradient id="gt${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g}"/><stop offset="1" stop-color="#F6F3EE"/></linearGradient></defs>
     <rect width="220" height="120" fill="url(#gt${seed})"/>
     <rect x="24" y="52" width="172" height="42" rx="6" fill="#fff" opacity=".5"/>
-    <rect x="24" y="34" width="172" height="20" rx="4" fill="#C9C2AE" opacity=".6"/>
-    <path d="M40 88h30l6-14h20l6 14h30" fill="none" stroke="#2D4F1E" stroke-width="3" stroke-linecap="round" opacity=".5"/>
-    <circle cx="70" cy="90" r="7" fill="#2E2B25" opacity=".22"/><circle cx="150" cy="90" r="7" fill="#2E2B25" opacity=".22"/>
-    <circle cx="176" cy="28" r="10" fill="#E27D60" opacity=".5"/>
+    <rect x="24" y="34" width="172" height="20" rx="4" fill="#D8D2C8" opacity=".6"/>
+    <path d="M40 88h30l6-14h20l6 14h30" fill="none" stroke="#5C3A21" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+    <circle cx="70" cy="90" r="7" fill="#5C3A21" opacity=".22"/><circle cx="150" cy="90" r="7" fill="#5C3A21" opacity=".22"/>
+    <circle cx="176" cy="28" r="10" fill="#5C3A21" opacity=".5"/>
   </svg>`;
 }
 
 /* ─────────── SCREENS ─────────── */
 const screens={};
 
-/* WELCOME — no role selection (this is the customer app) */
+/* WELCOME — light editorial hero, no role selection (customer app) */
+function welcomeHero(h){
+  return `<svg width="100%" height="${h||188}" viewBox="0 0 320 188" preserveAspectRatio="xMidYMid meet" aria-hidden="true" style="display:block">
+    <line x1="20" y1="150" x2="300" y2="150" stroke="var(--line2)" stroke-width="2"/>
+    <g stroke="#5C3A21" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".9">
+      <path d="M52 74 96 48l44 26"/><path d="M62 70v56M130 70v56M62 126h68"/>
+      <rect x="78" y="92" width="36" height="34" rx="3"/><path d="M78 108h36"/>
+    </g>
+    <circle cx="244" cy="52" r="20" fill="#5C3A21" opacity=".18"/>
+    <circle cx="244" cy="52" r="20" fill="none" stroke="#5C3A21" stroke-width="2" opacity=".6"/>
+    <g fill="none" stroke="#5C3A21" stroke-linejoin="round">
+      <path d="M150 138c3-16 9-26 22-27h30c10 0 16 6 22 16l10 4c6 2 9 6 9 12v7c0 3-2 5-5 5H157c-4 0-7-3-7-7z" stroke-width="2.6"/>
+      <path d="M176 118h22c7 0 11 4 14 11" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+    <circle cx="172" cy="150" r="9" fill="#FDFDFB" stroke="#5C3A21" stroke-width="2.4"/>
+    <circle cx="224" cy="150" r="9" fill="#FDFDFB" stroke="#5C3A21" stroke-width="2.4"/>
+    <g transform="translate(120 96) rotate(-28)"><path d="M0 0h26" stroke="#5C3A21" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="0" r="7" fill="#5C3A21"/></g>
+    <g transform="translate(100 30)"><path d="M10 30c0-8-6-14-14-14S-18 22-18 30c0 10 14 22 14 22S10 40 10 30z" fill="none" stroke="#5C3A21" stroke-width="2.4"/><circle cx="0" cy="28" r="4" fill="#5C3A21"/></g>
+  </svg>`;
+}
+const welcomeFeatures=[
+  {icon:'car',t:'Book a Garage',d:'Reserve a verified garage near you for a flat 100 ETB.'},
+  {icon:'bolt',t:'Emergency Help',d:'Dispatch the nearest verified mechanic when you break down.'},
+  {icon:'truck',t:'Roadside & Towing',d:'Battery, tyre, fuel or a flatbed — help is one tap away.'},
+];
+const rise=(d)=>`animation:ggRise .5s cubic-bezier(.22,.68,0,1) both;animation-delay:${d}ms`;
 screens.welcome=()=>`
-<div class="gg-rise" style="min-height:100%;display:flex;flex-direction:column;position:relative;padding:66px 22px 34px;
-  background:radial-gradient(120% 60% at 50% -10%,rgba(226,125,96,.20),transparent 60%),linear-gradient(160deg,#20361A 0%,#2D4F1E 60%,#3D6329 130%)">
-  <div style="position:absolute;inset:0;opacity:.5;pointer-events:none;background-image:radial-gradient(circle at 18% 24%,rgba(245,230,204,.07) 0 1px,transparent 1px),radial-gradient(circle at 62% 40%,rgba(245,230,204,.06) 0 1px,transparent 1px);background-size:26px 26px,34px 34px"></div>
-  <div style="display:flex;justify-content:flex-end;position:relative">
-    <button type="button" onclick="nav('home')" aria-label="Skip onboarding" style="border:0;background:none;font-size:13px;font-weight:600;color:#C9BE9E;cursor:pointer;padding:6px">Skip</button>
+<div style="min-height:100%;display:flex;flex-direction:column;background:var(--ground);padding:58px 24px 30px">
+  <div style="display:flex;align-items:center;justify-content:space-between;${rise(0)}">
+    <div style="display:flex;gap:6px;align-items:center">
+      ${[0,1,2].map(i=>`<span style="width:${i===0?22:7}px;height:7px;border-radius:99px;background:${i===0?'var(--forest)':'var(--line2)'}"></span>`).join('')}
+    </div>
+    <button type="button" onclick="nav('home')" aria-label="Skip onboarding" class="gg-press" style="border:0;background:none;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;padding:6px">Skip</button>
   </div>
-  <div style="margin-top:26px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative">
-    <div style="position:relative;width:100px;height:100px;display:grid;place-items:center">
-      <span style="position:absolute;inset:0;border-radius:32px;background:rgba(245,230,204,.06);border:1px solid rgba(245,230,204,.16)"></span>
-      <span style="position:absolute;inset:15px;border-radius:24px;background:rgba(226,125,96,.16);border:1px solid rgba(226,125,96,.4);box-shadow:0 12px 34px rgba(226,125,96,.3)"></span>
-      <span style="position:relative;color:#F5E6CC">${ic('wrench',36,'#F5E6CC',2)}</span>
-    </div>
-    <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:31px;font-weight:800;color:#F5E6CC;letter-spacing:-.6px;line-height:1.08;text-wrap:balance">Welcome to<br>Garage Go</h1>
-    <p style="margin:13px 0 0;font-size:14px;line-height:1.55;color:#CDC3A6;max-width:280px">On-demand garages, mechanics and roadside help across Ethiopia — verified, transparent, one tap away.</p>
-    <div style="margin-top:18px;display:flex;gap:16px;color:#B7AE90;font-size:11.5px;font-weight:500">
-      <span style="display:flex;align-items:center;gap:5px">${ic('shield',14,'#E27D60',2)}Verified</span>
-      <span style="display:flex;align-items:center;gap:5px">${ic('birr',14,'#E27D60',2)}Flat 100 ETB</span>
-      <span style="display:flex;align-items:center;gap:5px">${ic('bolt',14,'#E27D60',2)}24/7</span>
-    </div>
+
+  <div style="margin-top:24px;${rise(120)}"><div class="gg-float">${welcomeHero(230)}</div></div>
+
+  <div style="margin-top:14px;${rise(220)}">
+    <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:var(--ink);letter-spacing:-.9px;line-height:1.04;text-wrap:balance">Welcome to<br>Garage Go</h1>
+    <p style="margin:14px 0 0;font-size:14.5px;line-height:1.55;color:var(--muted);max-width:300px">Book a verified garage, find a mechanic, or get roadside help — anywhere in Ethiopia.</p>
   </div>
-  <div style="margin-top:auto;padding-top:28px;position:relative">
-    <button type="button" onclick="nav('started')" class="gg-t" style="width:100%;height:54px;border:0;border-radius:16px;background:#E27D60;color:#3A1D12;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Get started</button>
-    <p style="margin:16px 0 0;text-align:center;font-size:13px;color:#C9BE9E">Already have an account? <button type="button" onclick="nav('signin')" style="border:0;background:none;font-size:13px;font-weight:700;color:#F5E6CC;cursor:pointer;padding:0">Sign in</button></p>
-    <div style="margin-top:18px;display:flex;gap:6px;justify-content:center">
-      ${[0,1,2].map(i=>`<span style="width:${i===0?18:6}px;height:6px;border-radius:99px;background:${i===0?'#E27D60':'rgba(245,230,204,.28)'}"></span>`).join('')}
-    </div>
+
+  <div style="margin-top:auto;padding-top:26px;${rise(320)}">
+    <button type="button" onclick="nav('signin')" class="gg-t" aria-label="Get started" style="width:100%;height:56px;border:0;border-radius:16px;background:var(--forest);color:#fff;font-family:Outfit,sans-serif;font-size:15.5px;font-weight:700;cursor:pointer">Get Started</button>
+    <p style="margin:18px 0 0;text-align:center;font-size:13.5px;color:var(--muted)">Already have an account? <button type="button" onclick="nav('signin')" aria-label="Sign in" class="gg-press" style="border:0;background:none;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px">Sign in</button></p>
   </div>
 </div>`;
 
@@ -250,76 +284,96 @@ screens.welcome=()=>`
 screens.started=()=>`
 <div class="gg-rise" style="min-height:100%;display:flex;flex-direction:column;background:var(--ground);padding:60px 22px 30px">
   ${backBtn('welcome')}
-  <div style="margin-top:26px;height:220px;border-radius:24px;overflow:hidden;position:relative;background:linear-gradient(160deg,#EFE7D3,#E6DCC2)">
+  <div style="margin-top:26px;height:220px;border-radius:24px;overflow:hidden;position:relative;background:linear-gradient(160deg,#F4EFE7,#EFEAE1)">
     <svg viewBox="0 0 320 220" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-label="Illustration: a car being serviced at a garage">
-      <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1E9D3"/><stop offset="1" stop-color="#E6DCC1"/></linearGradient></defs>
+      <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5F1E9"/><stop offset="1" stop-color="#EFEAE1"/></linearGradient></defs>
       <rect width="320" height="220" fill="url(#sky)"/>
-      <circle cx="255" cy="52" r="30" fill="#E27D60" opacity=".45"/>
-      <path d="M0 168h320" stroke="#CBBF9C" stroke-width="2" opacity=".6"/>
-      <rect x="30" y="70" width="120" height="86" rx="8" fill="#2D4F1E" opacity=".12"/>
-      <path d="M30 70h120M30 70l60-26 60 26" fill="none" stroke="#2D4F1E" stroke-width="3" opacity=".45"/>
-      <rect x="52" y="96" width="30" height="30" rx="4" fill="#2D4F1E" opacity=".2"/>
-      <rect x="98" y="96" width="30" height="30" rx="4" fill="#2D4F1E" opacity=".2"/>
+      <circle cx="255" cy="52" r="30" fill="#5C3A21" opacity=".45"/>
+      <path d="M0 168h320" stroke="#D8D2C8" stroke-width="2" opacity=".6"/>
+      <rect x="30" y="70" width="120" height="86" rx="8" fill="#5C3A21" opacity=".12"/>
+      <path d="M30 70h120M30 70l60-26 60 26" fill="none" stroke="#5C3A21" stroke-width="3" opacity=".45"/>
+      <rect x="52" y="96" width="30" height="30" rx="4" fill="#5C3A21" opacity=".2"/>
+      <rect x="98" y="96" width="30" height="30" rx="4" fill="#5C3A21" opacity=".2"/>
       <g>
-        <path d="M150 150c4-22 12-34 30-36h44c14 0 22 8 30 22l14 6c8 3 12 8 12 16v10c0 4-3 7-7 7H160c-6 0-10-4-10-10z" fill="#2D4F1E"/>
-        <path d="M186 118h34c10 0 16 6 20 16h-66c4-10 8-16 12-16z" fill="#E27D60" opacity=".9"/>
-        <circle cx="182" cy="168" r="15" fill="#2A2620"/><circle cx="182" cy="168" r="6" fill="#B7AE90"/>
-        <circle cx="256" cy="168" r="15" fill="#2A2620"/><circle cx="256" cy="168" r="6" fill="#B7AE90"/>
+        <path d="M150 150c4-22 12-34 30-36h44c14 0 22 8 30 22l14 6c8 3 12 8 12 16v10c0 4-3 7-7 7H160c-6 0-10-4-10-10z" fill="#5C3A21"/>
+        <path d="M186 118h34c10 0 16 6 20 16h-66c4-10 8-16 12-16z" fill="#5C3A21" opacity=".9"/>
+        <circle cx="182" cy="168" r="15" fill="#5C3A21"/><circle cx="182" cy="168" r="6" fill="#C9C2B4"/>
+        <circle cx="256" cy="168" r="15" fill="#5C3A21"/><circle cx="256" cy="168" r="6" fill="#C9C2B4"/>
       </g>
-      <g transform="translate(120 120) rotate(-25)" stroke="#E27D60" stroke-width="7" stroke-linecap="round" fill="none"><path d="M0 0h34"/><circle cx="42" cy="0" r="9" fill="#E27D60" stroke="none"/></g>
-      <g transform="translate(70 40)"><path d="M0 22C0 10 -9 0 -20 0S-40 10 -40 22c0 14 20 30 20 30S0 36 0 22z" transform="translate(40 0)" fill="#E27D60"/><circle cx="20" cy="20" r="7" fill="#fff"/></g>
+      <g transform="translate(120 120) rotate(-25)" stroke="#5C3A21" stroke-width="7" stroke-linecap="round" fill="none"><path d="M0 0h34"/><circle cx="42" cy="0" r="9" fill="#5C3A21" stroke="none"/></g>
+      <g transform="translate(70 40)"><path d="M0 22C0 10 -9 0 -20 0S-40 10 -40 22c0 14 20 30 20 30S0 36 0 22z" transform="translate(40 0)" fill="#5C3A21"/><circle cx="20" cy="20" r="7" fill="#fff"/></g>
     </svg>
   </div>
   <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:27px;font-weight:800;color:var(--ink);letter-spacing:-.5px;line-height:1.12;text-wrap:balance">Your car, sorted<br>in three taps.</h1>
   <p style="margin:12px 0 0;font-size:14px;line-height:1.55;color:var(--muted)">Find a verified garage near you, reserve a slot for a flat 100 ETB, and pay for the repair on site. Emergency mechanics and towing are one tap away.</p>
   <div style="margin-top:20px;display:flex;flex-direction:column;gap:11px">
-    ${[['shield','Every garage & mechanic is verified'],['birr','Pay with Telebirr, CBE Birr or Amole'],['bolt','24/7 emergency help on the road']].map(([i,t])=>
+    ${[['shield','Every garage & mechanic is verified'],['birr','Confirm with Telebirr, CBE Birr or Amole'],['bolt','24/7 emergency help on the road']].map(([i,t])=>
       `<div style="display:flex;align-items:center;gap:11px"><span style="width:34px;height:34px;flex:none;border-radius:11px;background:var(--forest-t);color:var(--forest);display:grid;place-items:center">${ic(i,17,'var(--forest)',2)}</span><span style="font-size:13px;color:var(--ink2)">${t}</span></div>`).join('')}
   </div>
   <div style="margin-top:auto;padding-top:22px">${tealBtn('Get started','signin','Get started button')}</div>
 </div>`;
 
-/* SIGN IN */
-screens.signin=()=>{
-  const tabs=['Email & password','Phone OTP'];
-  const tabHtml=tabs.map((t,i)=>{const on=state.authTab===i;return `<button type="button" onclick="setTab(${i})" aria-label="Sign in with ${t}" style="flex:1;border:0;background:${on?'#fff':'transparent'};color:${on?'var(--ink)':'var(--muted)'};box-shadow:${on?'0 2px 6px rgba(46,43,37,.1)':'none'};border-radius:10px;height:38px;font-size:12.5px;font-weight:600;cursor:pointer">${t}</button>`}).join('');
-  const emailFields=`
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Email</span>${field('mail','email','dawit@email.com','Sign in with email')}</label>
-    <label style="display:block"><span style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Password<span style="color:var(--forest)">Forgot?</span></span>${pwField('pw','••••••••','Password input')}</label>`;
-  const phoneFields=`
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Phone number</span>${phoneField('Sign in with phone')}</label>
-    <p style="margin:0;font-size:11.5px;color:var(--muted)">We'll text you a 6-digit code to sign in.</p>`;
-  return `
-<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px">
-  ${backBtn('started')}
-  <div style="margin-top:22px;display:flex;align-items:center;gap:11px">
-    <div style="width:46px;height:46px;border-radius:14px;background:var(--forest);display:grid;place-items:center;color:#F5E6CC;flex:none">${ic('wrench',22,'#F5E6CC',2)}</div>
-    <div><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Sign in</h1><p style="margin:2px 0 0;font-size:12.5px;color:var(--muted)">Welcome back to Garage Go</p></div>
-  </div>
-  <div style="margin-top:22px;display:flex;gap:4px;background:#EBDFC6;border-radius:13px;padding:4px">${tabHtml}</div>
-  <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px">${state.authTab===0?emailFields:phoneFields}</div>
-  <div style="margin-top:18px">${tealBtn('Sign in','home','Sign in button')}</div>
-  ${socialBlock()}
-  <p style="margin:22px 0 0;text-align:center;font-size:13px;color:var(--muted)">New to Garage Go? <button type="button" onclick="nav('signup')" aria-label="Create account link" style="border:0;background:none;font-size:13px;font-weight:700;color:var(--forest);cursor:pointer;padding:0">Create an account</button></p>
-</div>`;
-};
+/* Big rounded inputs (inspiration style) */
+function bigPhone(aria){
+  return `<div style="display:flex;align-items:center;background:#F7F3F0;border:1px solid var(--line);border-radius:14px;padding:0 16px;height:54px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:14.5px;font-weight:600;color:var(--ink);padding-right:11px;margin-right:11px;border-right:1px solid var(--line2)">+251</span>
+    <input type="tel" inputmode="numeric" aria-label="${aria}" placeholder="9•• •• •• ••" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:14.5px;color:var(--ink)"></div>`;
+}
+function bigInput(type,ph,aria){
+  return `<input type="${type}" aria-label="${aria}" placeholder="${ph}" style="width:100%;height:54px;border:1px solid var(--line);background:#F7F3F0;border-radius:14px;padding:0 16px;font-size:14.5px;color:var(--ink);outline:0">`;
+}
+function otpBoxes(){
+  return `<div style="display:flex;gap:10px">${[0,1,2,3,4,5].map(()=>`<div style="flex:1;height:56px;border:1px solid var(--line2);background:#F7F3F0;border-radius:13px;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--muted)">•</div>`).join('')}</div>`;
+}
+function otpHint(n){return `<p style="margin:12px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5">Enter the 6-digit code sent to <strong style="color:var(--ink)">+251 ${n||'9•• •• •• ••'}</strong>. <button type="button" onclick="toast('Code resent')" class="gg-press" style="border:0;background:none;color:var(--ink);font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px">Resend</button></p>`;}
 
-/* SIGN UP */
-screens.signup=()=>`
-<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px">
-  ${backBtn('signin')}
-  <h1 style="margin:22px 0 0;font-family:Outfit,sans-serif;font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Create your account</h1>
-  <p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">Join Garage Go in under a minute.</p>
-  <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px">
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Full name</span>${field('user','text','Dawit Mekonnen','Full name input')}</label>
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Email</span>${field('mail','email','dawit@email.com','Email input')}</label>
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Phone <span style="color:var(--faint);font-weight:400">(optional)</span></span>${phoneField('Phone input')}</label>
-    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Password</span>${pwField('pw2','At least 8 characters','Password input')}</label>
+/* SIGN IN — phone OTP only */
+screens.signin=()=>`
+<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:56px 24px 30px;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    ${backBtn('welcome')}
+    <button type="button" onclick="nav('signup')" class="gg-press" aria-label="Go to sign up" style="border:0;background:none;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;padding:6px">Sign up</button>
   </div>
-  <div style="margin-top:18px">${tealBtn('Sign up','home','Sign up button')}</div>
-  ${socialBlock()}
-  <p style="margin:22px 0 0;text-align:center;font-size:13px;color:var(--muted)">Already have an account? <button type="button" onclick="nav('signin')" style="border:0;background:none;font-size:13px;font-weight:700;color:var(--forest);cursor:pointer;padding:0">Sign in</button></p>
+  <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:32px;font-weight:800;color:var(--ink);letter-spacing:-.7px;line-height:1.08">Sign in to<br>Continue</h1>
+  <div style="margin-top:30px">
+    ${state.otpSent?`
+      <span style="display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px">Verification</span>
+      ${otpBoxes()}
+      ${otpHint(state.phone)}
+      <div style="margin-top:22px">${tealBtn('Verify &amp; continue','home','Verify and continue')}</div>
+    `:`
+      <span style="display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px">Phone number</span>
+      ${bigPhone('Sign in with phone number')}
+      <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted)">We'll send a one-time code to verify it's you.</p>
+      <div style="margin-top:22px"><button type="button" onclick="sendOtp('down')" class="gg-t" aria-label="Send code" style="width:100%;height:54px;border:0;border-radius:15px;background:var(--forest);color:#fff;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Send code</button></div>
+    `}
+  </div>
+  <p style="margin-top:auto;padding-top:24px;text-align:center;font-size:13.5px;color:var(--muted)">Don't have an account? <button type="button" onclick="nav('signup')" aria-label="Create account link" class="gg-press" style="border:0;background:none;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px">Sign up</button></p>
 </div>`;
+
+/* SIGN UP — phone OTP only */
+screens.signup=()=>`
+<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:56px 24px 30px;display:flex;flex-direction:column">
+  ${backBtn('signin')}
+  <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:32px;font-weight:800;color:var(--ink);letter-spacing:-.7px;line-height:1.08">Create your<br>account</h1>
+  <div style="margin-top:28px">
+    ${state.otpSentUp?`
+      <span style="display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px">Verification</span>
+      ${otpBoxes()}
+      ${otpHint(state.phone)}
+      <div style="margin-top:22px">${tealBtn('Create account','home','Create account')}</div>
+    `:`
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><span style="display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px">Full name</span>${bigInput('text','Dawit Mekonnen','Full name input')}</div>
+        <div><span style="display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px">Phone number</span>${bigPhone('Phone number for OTP')}</div>
+      </div>
+      <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted)">We'll send a one-time code to verify your number.</p>
+      <div style="margin-top:22px"><button type="button" onclick="sendOtp('up')" class="gg-t" aria-label="Send code" style="width:100%;height:54px;border:0;border-radius:15px;background:var(--forest);color:#fff;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Send code</button></div>
+    `}
+  </div>
+  <p style="margin-top:auto;padding-top:24px;text-align:center;font-size:13.5px;color:var(--muted)">Already have an account? <button type="button" onclick="nav('signin')" class="gg-press" style="border:0;background:none;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px">Sign in</button></p>
+</div>`;
+function sendOtp(which){ if(which==='up')state.otpSentUp=true; else state.otpSent=true; toast('Code sent to your phone'); render(); }
 
 function field(icon,type,ph,aria){
   return `<span style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:0 13px;height:48px"><span style="width:18px;color:var(--faint);flex:none">${ic(icon,18,'var(--faint)')}</span><input type="${type}" aria-label="${aria}" placeholder="${ph}" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"></span>`;
@@ -342,38 +396,78 @@ function socialBlock(){
 function setTab(i){state.authTab=i;render();}
 function togglePw(k){state[k]=!state[k];render();}
 
-/* HOME */
+/* HOME — Beu-style delivery layout */
+const cats=[
+  {icon:'garage',label:'Garages',go:'search'},
+  {icon:'users',label:'Mechanic',go:'emergency'},
+  {icon:'bolt',label:'Emergency',go:'emergency'},
+  {icon:'truck',label:'Towing',go:'roadside'},
+  {icon:'bag',label:'Market',go:'market'},
+];
 screens.home=()=>`
-<div class="gg-rise">
-  <div style="padding:56px 20px 4px">
+<div>
+  <div class="gg-rise" style="padding:52px 20px 4px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div style="min-width:0">
-        <div style="display:flex;align-items:center;gap:5px;color:var(--muted)"><span style="color:var(--terra);flex:none">${ic('pin',13,'var(--terra)',2)}</span><span style="font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bole Medhanialem, Addis Ababa</span>${ic('chevR',11,'var(--muted)')}</div>
-        <h1 style="margin:8px 0 0;font-family:Outfit,sans-serif;font-size:26px;line-height:1.05;font-weight:700;color:var(--ink);letter-spacing:-.6px">Selam, Dawit</h1>
+        <div style="display:flex;align-items:center;gap:5px;color:var(--muted)"><span style="color:var(--terra);flex:none">${ic('pin',13,'var(--terra)',2)}</span><span style="font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bole Medhanialem</span>${ic('chevR',11,'var(--muted)')}</div>
+        <h1 style="margin:6px 0 0;font-family:Outfit,sans-serif;font-size:24px;line-height:1.05;font-weight:700;color:var(--ink);letter-spacing:-.5px">Selam, Dawit</h1>
       </div>
       <div style="display:flex;gap:8px;flex:none">
-        <button type="button" aria-label="Notifications" style="width:42px;height:42px;border:0;border-radius:14px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2);box-shadow:0 2px 8px rgba(46,43,37,.06)">${ic('bell',19)}</button>
-        <div aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#2D4F1E,#3D6329);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;font-size:15px">D</div>
+        <button type="button" aria-label="Notifications" style="position:relative;width:44px;height:44px;border:0;border-radius:15px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2);box-shadow:0 2px 10px rgba(58,42,29,.07)">${ic('bell',19)}<span style="position:absolute;top:11px;right:12px;width:7px;height:7px;border-radius:99px;background:var(--terra);border:1.5px solid #fff"></span></button>
+        <div aria-hidden="true" style="width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;font-size:16px">D</div>
       </div>
     </div>
-    <div style="margin-top:18px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:14px 15px;box-shadow:0 2px 12px rgba(46,43,37,.06)"><span style="color:var(--faint);flex:none">${ic('search',19,'var(--faint)')}</span><input type="text" aria-label="Search garages, services or parts" placeholder="Search garage, service or part" style="flex:1;min-width:0;border:0;outline:0;font-size:14px;color:var(--ink);background:transparent"><span style="color:var(--terra);flex:none">${ic('filter',19,'var(--terra)')}</span></div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 15px;box-shadow:0 2px 14px rgba(58,42,29,.05)"><span style="color:var(--faint);flex:none">${ic('search',19,'var(--faint)')}</span><input type="text" aria-label="Search garages, services or parts" placeholder="Search garage, service or part" style="flex:1;min-width:0;border:0;outline:0;font-size:14px;color:var(--ink);background:transparent"><span style="width:1px;height:20px;background:var(--line2)"></span><span style="color:var(--terra);flex:none">${ic('filter',18,'var(--terra)')}</span></div>
   </div>
-  <div style="padding:22px 16px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-    ${quick.map(q=>`<button type="button" class="gg-t" onclick="nav('${q.go}')" aria-label="${q.label}" style="border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0"><span style="width:58px;height:58px;border-radius:20px;background:${q.chip};color:${q.ink};display:grid;place-items:center;box-shadow:0 4px 12px ${q.shadow}">${ic(q.icon,24,q.ink,2)}</span><span style="font-size:11px;font-weight:600;line-height:1.2;text-align:center;color:var(--ink2)">${q.label}</span></button>`).join('')}
+
+  <!-- Promo banner (light, stark) -->
+  <div class="gg-rise" style="animation-delay:.05s;margin:18px 16px 0;background:#FAF7F4;border:1px solid var(--line);border-radius:22px;padding:18px 20px;position:relative;overflow:hidden;display:flex;align-items:center">
+    <div style="flex:1;z-index:1">
+      <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--muted)">VERIFIED NETWORK</span>
+      <h3 style="margin:6px 0 0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink);line-height:1.2">Book a trusted garage<br>in three taps</h3>
+      <button type="button" onclick="nav('search')" class="gg-t" style="margin-top:12px;border:0;border-radius:11px;background:var(--forest);color:#fff;height:38px;padding:0 16px;font-family:Outfit,sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">Explore ${ic('arrowR',15,'#fff',2.2)}</button>
+    </div>
+    <svg width="120" height="104" viewBox="0 0 120 104" aria-hidden="true" style="position:absolute;right:-6px;bottom:-6px">
+      <circle cx="86" cy="34" r="30" fill="#5C3A21" opacity=".07"/>
+      <g fill="none" stroke="#5C3A21" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".5">
+        <path d="M40 60 66 44l26 16"/><path d="M46 57v34M92 57v34M46 91h46"/><rect x="60" y="70" width="20" height="21" rx="2"/>
+      </g>
+      <g transform="translate(30 70)"><path d="M4 22c2-11 7-18 16-19h20c8 0 12 5 16 12l7 3c4 2 6 4 6 8v5c0 2-1 3-3 3H10c-3 0-5-2-5-5z" fill="#5C3A21" opacity=".16"/><circle cx="24" cy="35" r="6" fill="#5C3A21" opacity=".7"/><circle cx="62" cy="35" r="6" fill="#5C3A21" opacity=".7"/></g>
+    </svg>
   </div>
-  <div style="margin:22px 16px 0;background:var(--forest);border-radius:22px;padding:16px 17px;display:flex;align-items:center;gap:13px">
-    <div style="position:relative;width:48px;height:48px;flex:none"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="rgba(245,230,204,.16)" stroke-width="5"></circle><circle cx="24" cy="24" r="20" fill="none" stroke="#E27D60" stroke-width="5" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="38" transform="rotate(-90 24 24)"></circle></svg><span style="position:absolute;inset:0;display:grid;place-items:center;font-family:Outfit,sans-serif;font-size:11.5px;font-weight:700;color:#fff">70%</span></div>
-    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="color:#E27D60;flex:none">${ic('car',14,'#E27D60',2)}</span><strong style="font-size:13.5px;font-weight:600;color:#fff">Toyota Vitz 2014</strong></div><p style="margin:3px 0 0;font-size:11px;color:#C9BE9E;font-family:'IBM Plex Mono',monospace">AA-3-12345 · service in 1,200 km</p></div>
-    <span style="color:#A69C7E;flex:none">${ic('chevR',15,'#A69C7E')}</span>
-  </div>
-  <div style="padding:26px 0 0">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 16px 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Popular garages</h2><button type="button" onclick="nav('search')" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--forest);cursor:pointer;padding:0">See all</button></div>
-    <div class="hbar" style="display:flex;gap:12px;overflow-x:auto;padding:2px 16px 4px;scroll-snap-type:x mandatory">
-      ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="flex:none;width:204px;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:18px;padding:0;overflow:hidden;cursor:pointer;text-align:left"><div style="height:102px;position:relative">${garageThumb(204,102,i)}<span style="position:absolute;top:9px;left:9px;display:flex;align-items:center;gap:4px;background:rgba(46,43,37,.86);color:#fff;padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:600"><span style="color:#E27D60">${ic('star',11,'#E27D60')}</span>${g.rating}</span></div><div style="padding:11px 12px 13px"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</strong><span style="color:var(--forest);flex:none">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:4px 0 0;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</p><p style="margin:7px 0 0;font-size:11.5px;font-weight:600;color:var(--ink)">From ${g.from} ETB</p></div></button>`).join('')}
+
+  <!-- Categories -->
+  <div class="gg-rise" style="animation-delay:.1s;padding:22px 0 0">
+    <div class="hbar" style="display:flex;gap:14px;overflow-x:auto;padding:0 16px">
+      ${cats.map(c=>`<button type="button" class="gg-t" onclick="nav('${c.go}')" aria-label="${c.label}" style="flex:none;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;width:60px">
+        <span style="width:60px;height:60px;border-radius:20px;background:var(--forest-t);display:grid;place-items:center">${ic(c.icon,24,'var(--forest)',2)}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--ink2);text-align:center">${c.label}</span></button>`).join('')}
     </div>
   </div>
-  <div style="margin:24px 16px 0;background:var(--forest);border-radius:22px;padding:16px 17px;display:flex;align-items:center;gap:14px"><span style="flex:none;color:#E27D60">${ic('birr',28,'#E27D60',2)}</span><div><strong style="display:block;font-family:Outfit,sans-serif;font-size:14px;font-weight:600;color:#fff">100 ETB reservation fee</strong><p style="margin:3px 0 0;font-size:11px;color:#C9BE9E">50 ETB to Garage Go · 50 ETB to your garage. Repairs paid on site.</p></div></div>
-  <div style="height:118px"></div>
+
+  <!-- Popular garages -->
+  <div class="gg-rise" style="animation-delay:.15s;padding:24px 0 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Popular garages</h2><button type="button" onclick="nav('search')" aria-label="See all garages" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:0">See all</button></div>
+    <div class="hbar" style="display:flex;gap:12px;overflow-x:auto;padding:2px 16px 4px;scroll-snap-type:x mandatory">
+      ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="flex:none;width:214px;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:20px;padding:0;overflow:hidden;cursor:pointer;text-align:left;box-shadow:0 4px 16px rgba(58,42,29,.04)"><div style="height:110px;position:relative">${garageThumb(214,110,i)}<span style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.94);color:var(--ink);padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:600"><span style="color:#5C3A21">${ic('star',11,'#5C3A21')}</span>${g.rating}</span><span style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:999px;background:rgba(253,253,251,.92);display:grid;place-items:center;color:var(--terra)">${ic('heart',15,'var(--terra)')}</span></div><div style="padding:12px 13px 14px"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</strong><span style="color:var(--forest);flex:none">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:4px 0 0;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</p><p style="margin:8px 0 0;font-size:12px;font-weight:700;color:var(--ink)">From ${g.from} ETB</p></div></button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Nearby garages (vertical) -->
+  <div class="gg-rise" style="animation-delay:.2s;padding:24px 16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Nearby you</h2><button type="button" onclick="nav('search')" aria-label="See all nearby" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:0">See all</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${garages.slice(0,3).map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:11px;display:flex;gap:12px;cursor:pointer;text-align:left;align-items:center;box-shadow:0 2px 12px rgba(58,42,29,.04)">
+        <span style="width:72px;height:72px;border-radius:15px;overflow:hidden;flex:none">${garageThumb(72,72,i+1)}</span>
+        <span style="flex:1;min-width:0">
+          <span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:700;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',12,'var(--forest)',2)}</span></span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:5px;font-size:11.5px;color:var(--muted)"><span style="display:flex;align-items:center;gap:3px;color:var(--ink)"><span style="color:#5C3A21">${ic('star',12,'#5C3A21')}</span>${g.rating}</span>· ${g.dist} · ${g.hours.replace('Open · ','')}</span>
+          <span style="display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:3px 9px">From ${g.from} ETB</span>
+        </span>
+        <span style="color:var(--faint);flex:none">${ic('chevR',18,'var(--faint)')}</span></button>`).join('')}
+    </div>
+  </div>
+  <div style="height:120px"></div>
 </div>`;
 
 /* SEARCH */
@@ -390,7 +484,7 @@ screens.search=()=>{
   </div>
   <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:var(--muted)">${garages.length} garages nearby</span><span style="font-size:12.5px;color:var(--forest);font-weight:600;display:flex;align-items:center;gap:5px">${ic('filter',15,'var(--forest)')}Sort: Distance</span></div>
   <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px">
-    ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left"><span style="width:78px;height:78px;border-radius:14px;overflow:hidden;flex:none">${garageThumb(78,78,i)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:600;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></span><span style="margin-top:3px;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</span><span style="margin-top:2px;font-size:11px;color:${g.openFg};font-weight:600">${g.hours}</span><span style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:8px"><span style="display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--ink)"><span style="color:#E27D60">${ic('star',12,'#E27D60')}</span>${g.rating}<span style="color:var(--faint);font-weight:400">(${g.reviews})</span></span><span style="font-size:11.5px;font-weight:700;color:var(--forest)">From ${g.from} ETB</span></span></span></button>`).join('')}
+    ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left"><span style="width:78px;height:78px;border-radius:14px;overflow:hidden;flex:none">${garageThumb(78,78,i)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:600;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></span><span style="margin-top:3px;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</span><span style="margin-top:2px;font-size:11px;color:${g.openFg};font-weight:600">${g.hours}</span><span style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:8px"><span style="display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--ink)"><span style="color:#5C3A21">${ic('star',12,'#5C3A21')}</span>${g.rating}<span style="color:var(--faint);font-weight:400">(${g.reviews})</span></span><span style="font-size:11.5px;font-weight:700;color:var(--forest)">From ${g.from} ETB</span></span></span></button>`).join('')}
   </div>
   <div style="height:118px"></div>
 </div>`;
@@ -400,16 +494,16 @@ function setChip(i){state.chip=i;render();}
 /* GARAGE PROFILE + BOOKING */
 screens.garage=()=>{
   const g=garages[0];
-  const svcHtml=services.map((s,i)=>{const on=state.service===i;return `<button type="button" onclick="setSvc(${i})" style="width:100%;text-align:left;border:1px solid ${on?FOREST:'var(--line)'};background:${on?'var(--forest-t2)':'#fff'};border-radius:14px;padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer"><span style="width:20px;height:20px;border-radius:999px;border:2px solid ${on?FOREST:'#CBC2AC'};background:${on?FOREST:'#fff'};display:grid;place-items:center;flex:none">${on?ic('check',12,'#fff',3):''}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13px;font-weight:600;color:var(--ink)">${s.n}</strong><span style="font-size:11px;color:var(--muted)">${s.d}</span></span><span style="font-size:12.5px;font-weight:700;color:var(--ink)">${s.p} ETB</span></button>`}).join('');
-  const dayHtml=days.map((x,i)=>{const on=state.day===i;return `<button type="button" onclick="setDay(${i})" style="flex:none;border:1px solid ${on?DARK:'var(--line2)'};background:${on?DARK:'#fff'};border-radius:13px;width:52px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer"><span style="font-size:10.5px;color:${on?'#B7AE90':'var(--faint)'}">${x[0]}</span><strong style="font-size:16px;color:${on?'#fff':'var(--ink)'}">${x[1]}</strong></button>`}).join('');
-  const slotHtml=slots.map((t,i)=>{const off=i===3;const on=state.slot===i&&!off;return `<button type="button" ${off?'disabled':`onclick="setSlot(${i})"`} style="border:1px solid ${on?FOREST:'var(--line2)'};background:${on?'var(--forest-t)':off?'#EFE9DC':'#fff'};color:${on?'var(--forest)':off?'#B9B19C':'var(--ink2)'};border-radius:11px;height:40px;font-size:12.5px;font-weight:600;cursor:${off?'not-allowed':'pointer'}">${t}</button>`}).join('');
+  const svcHtml=services.map((s,i)=>{const on=state.service===i;return `<button type="button" onclick="setSvc(${i})" style="width:100%;text-align:left;border:1px solid ${on?FOREST:'var(--line)'};background:${on?'var(--forest-t2)':'#fff'};border-radius:14px;padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer"><span style="width:20px;height:20px;border-radius:999px;border:2px solid ${on?FOREST:'#DEDBD7'};background:${on?FOREST:'#fff'};display:grid;place-items:center;flex:none">${on?ic('check',12,'#fff',3):''}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13px;font-weight:600;color:var(--ink)">${s.n}</strong><span style="font-size:11px;color:var(--muted)">${s.d}</span></span><span style="font-size:12.5px;font-weight:700;color:var(--ink)">${s.p} ETB</span></button>`}).join('');
+  const dayHtml=days.map((x,i)=>{const on=state.day===i;return `<button type="button" onclick="setDay(${i})" style="flex:none;border:1px solid ${on?DARK:'var(--line2)'};background:${on?DARK:'#fff'};border-radius:13px;width:52px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer"><span style="font-size:10.5px;color:${on?'#C9C2B4':'var(--faint)'}">${x[0]}</span><strong style="font-size:16px;color:${on?'#fff':'var(--ink)'}">${x[1]}</strong></button>`}).join('');
+  const slotHtml=slots.map((t,i)=>{const off=i===3;const on=state.slot===i&&!off;return `<button type="button" ${off?'disabled':`onclick="setSlot(${i})"`} style="border:1px solid ${on?FOREST:'var(--line2)'};background:${on?'var(--forest-t)':off?'#F1EDE7':'#fff'};color:${on?'var(--forest)':off?'#ABA49E':'var(--ink2)'};border-radius:11px;height:40px;font-size:12.5px;font-weight:600;cursor:${off?'not-allowed':'pointer'}">${t}</button>`}).join('');
   return `
 <div class="gg-rise" style="min-height:100%;position:relative">
   <div style="height:210px;position:relative">${garageThumb(390,210,0)}
     <div style="position:absolute;top:52px;left:16px;right:16px;display:flex;justify-content:space-between">${backBtn('search')}<button type="button" aria-label="Save garage" style="width:40px;height:40px;border:0;border-radius:13px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--terra);box-shadow:0 2px 8px rgba(0,0,0,.08)">${ic('heart',18,'var(--terra)')}</button></div>
   </div>
   <div style="margin-top:-26px;position:relative;background:var(--ground);border-radius:26px 26px 0 0;padding:20px 16px 0">
-    <div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">${g.name}</h1><span style="color:var(--forest)">${ic('shield',16,'var(--forest)',2)}</span></div><p style="margin:5px 0 0;font-size:12px;color:var(--muted)">${g.area} · ${g.dist} · ${g.hours}</p></div><div style="text-align:right;flex:none"><div style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--ink)"><span style="color:#E27D60">${ic('star',14,'#E27D60')}</span>${g.rating}</div><span style="font-size:11px;color:var(--faint)">${g.reviews} reviews</span></div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">${g.name}</h1><span style="color:var(--forest)">${ic('shield',16,'var(--forest)',2)}</span></div><p style="margin:5px 0 0;font-size:12px;color:var(--muted)">${g.area} · ${g.dist} · ${g.hours}</p></div><div style="text-align:right;flex:none"><div style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--ink)"><span style="color:#5C3A21">${ic('star',14,'#5C3A21')}</span>${g.rating}</div><span style="font-size:11px;color:var(--faint)">${g.reviews} reviews</span></div></div>
     <div class="hbar" style="margin-top:12px;display:flex;gap:7px;overflow-x:auto">${g.tags.concat(['AC','Warranty']).map(t=>chipTag(t)).join('')}</div>
     <div style="margin-top:20px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Choose a service</h2><div style="display:flex;flex-direction:column;gap:9px">${svcHtml}</div></div>
     <div style="margin-top:20px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Pick a date</h2><div class="hbar" style="display:flex;gap:8px;overflow-x:auto">${dayHtml}</div></div>
@@ -417,7 +511,7 @@ screens.garage=()=>{
     <div style="margin-top:16px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Vehicle & problem</h2><div style="display:flex;flex-direction:column;gap:10px">${field('car','text','Toyota Vitz 2014 · AA-3-12345','Vehicle')}<textarea aria-label="Describe the problem" placeholder="Describe the problem (optional)" rows="2" style="border:1px solid var(--line);border-radius:13px;padding:11px 13px;font-size:13px;color:var(--ink);background:#fff;outline:0;resize:none"></textarea></div></div>
     <div style="height:150px"></div>
   </div>
-  <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(245,230,204,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:13px 16px 20px;display:flex;align-items:center;gap:12px"><div style="flex:1"><span style="font-size:11px;color:var(--muted)">Reservation fee</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:18px;font-weight:800;color:var(--ink)">100 ETB</strong></div><button type="button" class="gg-t" onclick="nav('pay')" aria-label="Pay 100 ETB reservation fee" style="flex:none;border:0;border-radius:14px;background:var(--forest);color:#fff;height:52px;padding:0 26px;font-family:Outfit,sans-serif;font-size:14.5px;font-weight:700;cursor:pointer">Pay 100 ETB</button></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(253,253,251,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:13px 16px 20px;display:flex;align-items:center;gap:12px"><div style="flex:1"><span style="font-size:11px;color:var(--muted)">Reservation fee</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:18px;font-weight:800;color:var(--ink)">100 ETB</strong></div><button type="button" class="gg-t" onclick="nav('pay')" aria-label="Confirm booking" style="flex:none;border:0;border-radius:14px;background:var(--forest);color:#fff;height:52px;padding:0 26px;font-family:Outfit,sans-serif;font-size:14.5px;font-weight:700;cursor:pointer">Confirm booking</button></div>
 </div>`;
 };
 function setSvc(i){state.service=i;render();}
@@ -433,10 +527,10 @@ function openPaySheet(){
   sheet.innerHTML=`
     <div onclick="closePay(event)" style="position:absolute;inset:0"></div>
     <div class="gg-rise" style="position:relative;background:var(--ground);border-radius:26px 26px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.25)">
-      <div style="width:40px;height:5px;border-radius:99px;background:#D6CBB2;margin:0 auto 14px"></div>
-      <div style="display:flex;align-items:center;gap:10px"><div style="width:42px;height:42px;border-radius:12px;background:#E27D60;display:grid;place-items:center;color:#fff;font-family:Outfit,sans-serif;font-weight:800;font-size:13px">T</div><div><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Pay with Telebirr</h2><p style="margin:2px 0 0;font-size:12px;color:var(--muted)">100 ETB reservation fee</p></div></div>
+      <div style="width:40px;height:5px;border-radius:99px;background:#DEDBD7;margin:0 auto 14px"></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:42px;height:42px;border-radius:12px;background:#5C3A21;display:grid;place-items:center;color:#fff;font-family:Outfit,sans-serif;font-weight:800;font-size:13px">T</div><div><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Confirm with Telebirr</h2><p style="margin:2px 0 0;font-size:12px;color:var(--muted)">100 ETB reservation fee</p></div></div>
       <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-        ${telebirr.map((t,i)=>`<button type="button" onclick="payNow(${i})" aria-label="Pay with Telebirr ${t.n}" class="gg-t" style="border:1px solid var(--line);background:#fff;border-radius:15px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left"><span style="width:40px;height:40px;border-radius:11px;background:var(--terra-t);color:var(--terra-d);display:grid;place-items:center;flex:none">${ic('phone',18,'var(--terra-d)',2)}</span><span style="flex:1;min-width:0"><strong style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink)">${t.n}</strong><span style="font-size:11.5px;color:var(--muted)">${t.owner} · ${t.label}</span></span><span style="color:var(--forest)">${ic('chevR',16,'var(--forest)')}</span></button>`).join('')}
+        ${telebirr.map((t,i)=>`<button type="button" onclick="payNow(${i})" aria-label="Confirm with Telebirr ${t.n}" class="gg-t" style="border:1px solid var(--line);background:#fff;border-radius:15px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left"><span style="width:40px;height:40px;border-radius:11px;background:var(--terra-t);color:var(--terra-d);display:grid;place-items:center;flex:none">${ic('phone',18,'var(--terra-d)',2)}</span><span style="flex:1;min-width:0"><strong style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink)">${t.n}</strong><span style="font-size:11.5px;color:var(--muted)">${t.owner} · ${t.label}</span></span><span style="color:var(--forest)">${ic('chevR',16,'var(--forest)')}</span></button>`).join('')}
       </div>
       <p style="margin:14px 0 0;text-align:center;font-size:11px;color:var(--faint)">Mock payment — no real transaction is made.</p>
     </div>`;
@@ -445,14 +539,14 @@ function openPaySheet(){
 function closePay(e){if(e&&e.currentTarget!==e.target)return;const s=el('paySheet');if(s)s.remove();}
 function payNow(i){
   const s=el('paySheet');
-  if(s)s.innerHTML=`<div style="position:absolute;inset:0;display:grid;place-items:center;background:rgba(30,26,20,.5)"><div style="width:64px;height:64px;border-radius:50%;border:4px solid rgba(245,230,204,.3);border-top-color:#E27D60;animation:spin 1s linear infinite"></div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  if(s)s.innerHTML=`<div style="position:absolute;inset:0;display:grid;place-items:center;background:rgba(30,26,20,.5)"><div style="width:64px;height:64px;border-radius:50%;border:4px solid rgba(253,253,251,.3);border-top-color:#5C3A21;animation:spin 1s linear infinite"></div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
   state.payChoice=telebirr[i];
   setTimeout(()=>{if(s)s.remove();toast('Reservation confirmed!');nav('confirm');},1050);
 }
 function toast(msg){
   const t=document.createElement('div');
   t.setAttribute('role','status');t.textContent=msg;
-  t.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:90;background:#2D4F1E;color:#F5E6CC;font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(45,79,30,.4);animation:ggRise .3s both';
+  t.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:90;background:#5C3A21;color:#FDFDFB;font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(194,155,116,.4);animation:ggRise .3s both';
   document.querySelector('.stage').appendChild(t);
   setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},2200);
 }
@@ -462,12 +556,12 @@ screens.confirm=()=>{
   const bid='GG-'+Math.floor(100000+Math.random()*899999);
   return `
 <div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px;display:flex;flex-direction:column">
-  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:14px"><div style="width:82px;height:82px;border-radius:50%;background:var(--forest-t);display:grid;place-items:center;animation:ggPop .45s both"><span style="width:52px;height:52px;border-radius:50%;background:var(--forest);display:grid;place-items:center;color:#fff">${ic('check',30,'#fff',3)}</span></div><h1 style="margin:20px 0 0;font-family:Outfit,sans-serif;font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Reservation confirmed</h1><p style="margin:8px 0 0;font-size:13px;color:var(--muted);max-width:260px">Your slot is held. Show this booking ID at the garage.</p></div>
-  <div style="margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 4px 16px rgba(46,43,37,.05)">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:14px"><div style="width:82px;height:82px;border-radius:50%;background:var(--forest-t);display:grid;place-items:center;animation:ggPop .45s both"><span style="width:52px;height:52px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:#fff">${ic('check',30,'#fff',3)}</span></div><h1 style="margin:20px 0 0;font-family:Outfit,sans-serif;font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Reservation confirmed</h1><p style="margin:8px 0 0;font-size:13px;color:var(--muted);max-width:260px">Your slot is held. Show this booking ID at the garage.</p></div>
+  <div style="margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 4px 16px rgba(58,42,29,.05)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px dashed var(--line2)"><div><span style="font-size:11px;color:var(--muted)">Booking ID</span><strong style="display:block;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--ink);letter-spacing:.5px">${bid}</strong></div><span style="font-size:11px;font-weight:600;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:5px 11px">Confirmed</span></div>
-    ${[['Garage','Bole Auto Care'],['Service',services[state.service].n],['Date & time','Wed 17 Sep · '+slots[state.slot]],['Vehicle','Toyota Vitz 2014 · AA-3-12345'],['Paid via','Telebirr '+(state.payChoice?state.payChoice.n:'0987505315')]].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;${i?'border-top:1px solid #EFE7D5':''}"><span style="font-size:12.5px;color:var(--muted)">${k}</span><span style="font-size:12.5px;font-weight:600;color:var(--ink);text-align:right">${v}</span></div>`).join('')}
+    ${[['Garage','Bole Auto Care'],['Service',services[state.service].n],['Date & time','Wed 17 Sep · '+slots[state.slot]],['Vehicle','Toyota Vitz 2014 · AA-3-12345'],['Paid via','Telebirr '+(state.payChoice?state.payChoice.n:'0987505315')]].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;${i?'border-top:1px solid #E6E4E0':''}"><span style="font-size:12.5px;color:var(--muted)">${k}</span><span style="font-size:12.5px;font-weight:600;color:var(--ink);text-align:right">${v}</span></div>`).join('')}
   </div>
-  <div style="margin-top:14px;background:var(--forest);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="color:#E27D60;flex:none">${ic('birr',22,'#E27D60',2)}</span><div style="flex:1"><strong style="display:block;font-size:12.5px;color:#fff">100 ETB fee split</strong><p style="margin:2px 0 0;font-size:11px;color:#C9BE9E">50 ETB → Garage Go · 50 ETB → Bole Auto Care</p></div></div>
+  <div style="margin-top:14px;background:var(--surface);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="color:#fff;flex:none">${ic('birr',22,'#fff',2)}</span><div style="flex:1"><strong style="display:block;font-size:12.5px;color:#fff">100 ETB fee split</strong><p style="margin:2px 0 0;font-size:11px;color:#EDE9E3">50 ETB → Garage Go · 50 ETB → Bole Auto Care</p></div></div>
   <div style="margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:10px">${tealBtn('Back to home','home','Back to home')}<button type="button" onclick="nav('search')" style="width:100%;height:48px;border:1px solid var(--line2);background:#fff;border-radius:15px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer">Book another garage</button></div>
 </div>`;
 };
@@ -477,17 +571,17 @@ screens.emergency=()=>`
 <div class="gg-rise">
   <div style="padding:56px 16px 0">
     <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Emergency mechanic</h1>
-    <div style="margin-top:16px;background:linear-gradient(140deg,#E27D60,#CE6A4E);border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden">
+    <div style="margin-top:16px;background:linear-gradient(140deg,#5C3A21,#4A2E19);border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden">
       <div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.92">${ic('bolt',15,'#fff',2.4)} STRANDED?</div>
       <h2 style="margin:8px 0 0;font-family:Outfit,sans-serif;font-size:20px;font-weight:800;line-height:1.15">I need a mechanic<br>now</h2>
       <p style="margin:8px 0 0;font-size:12.5px;opacity:.94;max-width:240px">Share your location and we'll dispatch the nearest verified mechanic.</p>
-      <button type="button" class="gg-t" onclick="toast('Locating nearby mechanics…')" aria-label="Get Emergency Help" style="margin-top:14px;border:0;border-radius:13px;background:#fff;color:#B14B2E;height:46px;padding:0 20px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px">${ic('pin',17,'#B14B2E',2)}Locate me & dispatch</button>
+      <button type="button" class="gg-t" onclick="toast('Locating nearby mechanics…')" aria-label="Get Emergency Help" style="margin-top:14px;border:0;border-radius:13px;background:#fff;color:#5C3A21;height:46px;padding:0 20px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px">${ic('pin',17,'#5C3A21',2)}Locate me & dispatch</button>
     </div>
   </div>
   <div style="padding:22px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:var(--ink)">Verified mechanics nearby</h2>
     <div style="display:flex;flex-direction:column;gap:11px">
-      ${mechanics.map(m=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px"><div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#2E2B25,#4A4A4A);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;flex:none">${m.name[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;color:var(--ink)">${m.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:2px 0 0;font-size:11.5px;color:var(--muted)">${m.area} · ${m.exp} exp</p></div><div style="text-align:right;flex:none"><span style="font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${m.eta}</span><p style="margin:4px 0 0;font-size:10.5px;color:var(--faint)">${m.dist}</p></div></div><div class="hbar" style="margin-top:10px;display:flex;gap:6px;overflow-x:auto">${m.tags.map(t=>chipTag(t)).join('')}</div><div style="margin-top:11px;display:flex;gap:8px"><button type="button" onclick="toast('Requesting ${m.name}…')" style="flex:1;border:0;border-radius:12px;background:var(--forest);color:#fff;height:42px;font-size:12.5px;font-weight:700;cursor:pointer">Request now</button><button type="button" aria-label="Call ${m.name}" style="width:44px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2)">${ic('phone',18)}</button></div></div>`).join('')}
+      ${mechanics.map(m=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px"><div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;flex:none">${m.name[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;color:var(--ink)">${m.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:2px 0 0;font-size:11.5px;color:var(--muted)">${m.area} · ${m.exp} exp</p></div><div style="text-align:right;flex:none"><span style="font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${m.eta}</span><p style="margin:4px 0 0;font-size:10.5px;color:var(--faint)">${m.dist}</p></div></div><div class="hbar" style="margin-top:10px;display:flex;gap:6px;overflow-x:auto">${m.tags.map(t=>chipTag(t)).join('')}</div><div style="margin-top:11px;display:flex;gap:8px"><button type="button" onclick="toast('Requesting ${m.name}…')" style="flex:1;border:0;border-radius:12px;background:var(--forest);color:#fff;height:42px;font-size:12.5px;font-weight:700;cursor:pointer">Request now</button><button type="button" aria-label="Call ${m.name}" style="width:44px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2)">${ic('phone',18)}</button></div></div>`).join('')}
     </div>
   </div>
   <div style="height:118px"></div>
@@ -501,7 +595,7 @@ screens.roadside=()=>`
   </div>
   <div style="padding:20px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:var(--ink)">What do you need?</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${roadsideOpts.map((r,i)=>`<button type="button" onclick="setRoad(${i})" style="border:1px solid ${state.road===i?FOREST:'var(--line2)'};background:${r.bg};color:${r.ink};border-radius:18px;padding:15px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px;box-shadow:${state.road===i?'0 0 0 2px rgba(45,79,30,.3)':'none'}"><span style="width:42px;height:42px;border-radius:12px;background:${r.chip};color:${r.cIn};display:grid;place-items:center">${ic(r.icon,20,r.cIn,2)}</span><span><strong style="display:block;font-family:Outfit,sans-serif;font-size:14px;font-weight:600">${r.t}</strong><span style="font-size:11px;opacity:.7">${r.d}</span></span></button>`).join('')}
+      ${roadsideOpts.map((r,i)=>`<button type="button" onclick="setRoad(${i})" style="border:1px solid ${state.road===i?FOREST:'var(--line2)'};background:${r.bg};color:${r.ink};border-radius:18px;padding:15px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px;box-shadow:${state.road===i?'0 0 0 2px rgba(194,155,116,.3)':'none'}"><span style="width:42px;height:42px;border-radius:12px;background:${r.chip};color:${r.cIn};display:grid;place-items:center">${ic(r.icon,20,r.cIn,2)}</span><span><strong style="display:block;font-family:Outfit,sans-serif;font-size:14px;font-weight:600">${r.t}</strong><span style="font-size:11px;opacity:.7">${r.d}</span></span></button>`).join('')}
     </div>
   </div>
   <div style="padding:18px 16px 0"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Vehicle</h2>${field('car','text','Toyota Vitz 2014 · AA-3-12345','Vehicle')}</div>
@@ -526,15 +620,15 @@ screens.market=()=>`
     ${products.map((p,i)=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;overflow:hidden"><div style="height:96px;position:relative">${garageThumb(200,96,i+1)}${p.tag?`<span style="position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;color:#fff;background:var(--terra);border-radius:999px;padding:3px 8px">${p.tag}</span>`:''}</div><div style="padding:11px 12px 13px"><strong style="display:block;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.25">${p.n}</strong><p style="margin:4px 0 0;font-size:10.5px;color:var(--muted)">${p.c}</p><p style="margin:7px 0 0;font-family:Outfit,sans-serif;font-size:14px;font-weight:800;color:var(--forest)">${p.p} ETB</p></div></div>`).join('')}
   </div>
   <div style="height:118px"></div>
-  <button type="button" onclick="toast('Opening chat with seller…')" aria-label="Contact seller" style="position:absolute;right:18px;bottom:130px;z-index:30;border:0;border-radius:16px;background:var(--forest);color:#F5E6CC;height:52px;padding:0 20px;display:flex;align-items:center;gap:9px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 26px rgba(45,79,30,.35)">${ic('chat',19,'#F5E6CC',2)}Contact seller</button>
+  <button type="button" onclick="toast('Opening chat with seller…')" aria-label="Contact seller" style="position:absolute;right:18px;bottom:130px;z-index:30;border:0;border-radius:16px;background:var(--surface);color:#FDFDFB;height:52px;padding:0 20px;display:flex;align-items:center;gap:9px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 26px rgba(194,155,116,.35)">${ic('chat',19,'#FDFDFB',2)}Contact seller</button>
 </div>`;
 
 /* PROFILE */
 screens.profile=()=>`
 <div class="gg-rise">
-  <div style="padding:56px 16px 0;text-align:center"><div style="width:76px;height:76px;border-radius:24px;margin:0 auto;background:linear-gradient(135deg,#2D4F1E,#3D6329);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;font-size:28px">D</div><h1 style="margin:12px 0 0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">Dawit Mekonnen</h1><p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">+251 91 •• •• 42 · Bole, Addis Ababa</p></div>
-  <div style="margin:18px 16px 0;background:var(--forest);border-radius:22px;padding:18px;color:#fff;position:relative;overflow:hidden"><div style="position:absolute;right:-24px;bottom:-24px;width:120px;height:120px;border-radius:50%;background:rgba(226,125,96,.16)"></div><div style="display:flex;justify-content:space-between;align-items:start;position:relative"><div><span style="font-size:11.5px;color:#C9BE9E">Garage Go points</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#E27D60;line-height:1">640</strong></div><button type="button" onclick="toast('Rewards coming soon')" style="border:1px solid rgba(245,230,204,.24);background:rgba(245,230,204,.08);color:#F5E6CC;border-radius:11px;height:36px;padding:0 13px;font-size:11.5px;font-weight:600;cursor:pointer">View rewards</button></div><div style="margin-top:14px;display:flex;gap:18px;position:relative">${[['24','Bookings'],['6','Saved'],['4.9','Rating']].map(([v,k])=>`<div><strong style="font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:#fff">${v}</strong><p style="margin:1px 0 0;font-size:10.5px;color:#C9BE9E">${k}</p></div>`).join('')}</div></div>
-  <div style="margin:18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden">${profileMenu.map((m,i)=>`<button type="button" style="width:100%;border:0;background:none;padding:14px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;${i?'border-top:1px solid #EFE7D5':''}"><span style="width:38px;height:38px;border-radius:11px;background:var(--ground);color:var(--ink2);display:grid;place-items:center;flex:none">${ic(m.icon,18,'var(--ink2)')}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13.5px;font-weight:600;color:var(--ink)">${m.t}</strong><span style="font-size:11.5px;color:var(--muted)">${m.d}</span></span><span style="color:#CBC2AC">${ic('chevR',16,'#CBC2AC')}</span></button>`).join('')}</div>
+  <div style="padding:56px 16px 0;text-align:center"><div style="width:76px;height:76px;border-radius:24px;margin:0 auto;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;font-size:28px">D</div><h1 style="margin:12px 0 0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">Dawit Mekonnen</h1><p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">+251 91 •• •• 42 · Bole, Addis Ababa</p></div>
+  <div style="margin:18px 16px 0;background:var(--surface);border-radius:22px;padding:18px;color:#fff;position:relative;overflow:hidden"><div style="position:absolute;right:-24px;bottom:-24px;width:120px;height:120px;border-radius:50%;background:rgba(194,155,116,.16)"></div><div style="display:flex;justify-content:space-between;align-items:start;position:relative"><div><span style="font-size:11.5px;color:#EDE9E3">Garage Go points</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#fff;line-height:1">640</strong></div><button type="button" onclick="toast('Rewards coming soon')" style="border:1px solid rgba(253,253,251,.24);background:rgba(253,253,251,.08);color:#FDFDFB;border-radius:11px;height:36px;padding:0 13px;font-size:11.5px;font-weight:600;cursor:pointer">View rewards</button></div><div style="margin-top:14px;display:flex;gap:18px;position:relative">${[['24','Bookings'],['6','Saved'],['4.9','Rating']].map(([v,k])=>`<div><strong style="font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:#fff">${v}</strong><p style="margin:1px 0 0;font-size:10.5px;color:#EDE9E3">${k}</p></div>`).join('')}</div></div>
+  <div style="margin:18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden">${profileMenu.map((m,i)=>`<button type="button" style="width:100%;border:0;background:none;padding:14px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;${i?'border-top:1px solid #E6E4E0':''}"><span style="width:38px;height:38px;border-radius:11px;background:var(--ground);color:var(--ink2);display:grid;place-items:center;flex:none">${ic(m.icon,18,'var(--ink2)')}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13.5px;font-weight:600;color:var(--ink)">${m.t}</strong><span style="font-size:11.5px;color:var(--muted)">${m.d}</span></span><span style="color:#DEDBD7">${ic('chevR',16,'#DEDBD7')}</span></button>`).join('')}</div>
   <div style="padding:16px"><button type="button" onclick="nav('welcome')" style="width:100%;height:48px;border:1px solid var(--line2);background:#fff;border-radius:15px;font-size:13.5px;font-weight:600;color:var(--terra-d);cursor:pointer">Sign out</button></div>
   <div style="height:40px"></div>
 </div>`;
@@ -542,7 +636,7 @@ screens.profile=()=>`
 /* ─────────── ROUTER ─────────── */
 const tabs=[
   {key:'home',label:'Home',icon:'home'},
-  {key:'search',label:'Garages',icon:'car'},
+  {key:'search',label:'Garages',icon:'garage'},
   {key:'market',label:'Market',icon:'bag'},
   {key:'profile',label:'Profile',icon:'user'},
 ];
@@ -550,16 +644,32 @@ const tabScreens=['home','search','market','profile','emergency','roadside'];
 let current='welcome';
 function nav(key){
   if(key==='pay'){openPaySheet();return;}
+  // Reset the OTP step whenever we (re)enter an auth screen.
+  if(key==='signin'){state.otpSent=false;}
+  if(key==='signup'){state.otpSentUp=false;}
   current=key;render();scr.scrollTop=0;
 }
+let welcomeTimer=null;
+function welcomeMount(){
+  const car=el('wCar'); const dots=el('wDots');
+  if(!car||!dots) return;
+  let i=0; const n=welcomeFeatures.length;
+  const paint=()=>{ [...dots.children].forEach((d,k)=>{ d.style.width=(k===i?'20px':'6px'); d.style.background=(k===i?'var(--forest)':'rgba(58,42,29,.18)'); }); };
+  const go=()=>{ i=(i+1)%n; car.scrollTo({left:i*car.clientWidth,behavior:'smooth'}); paint(); };
+  welcomeTimer=setInterval(go,2600);
+  // keep dots in sync if the user swipes manually
+  car.addEventListener('scroll',()=>{ const k=Math.round(car.scrollLeft/car.clientWidth); if(k!==i){ i=k; paint(); } },{passive:true});
+}
 function render(){
+  if(welcomeTimer){clearInterval(welcomeTimer);welcomeTimer=null;}
   scr.innerHTML=(screens[current]||screens.home)();
+  if(current==='welcome') welcomeMount();
   const tb=el('tabbar');
   if(tabScreens.includes(current)){
     tb.hidden=false;
     tb.innerHTML=tabs.map(t=>{
       const on=t.key===current||(t.key==='search'&&current==='garage');
-      return `<button type="button" class="tab ${on?'on':''}" onclick="nav('${t.key}')" aria-label="${t.label}" aria-current="${on?'page':'false'}">${ic(t.icon,22,on?'var(--forest)':'var(--muted)',2)}<span class="lab">${t.label}</span><span class="dot"></span></button>`;
+      return `<button type="button" class="tab ${on?'on':''}" onclick="nav('${t.key}')" aria-label="${t.label}" aria-current="${on?'page':'false'}"><span class="ico">${ic(t.icon,23,on?'var(--forest)':'var(--muted)',on?2.2:1.9)}</span><span class="lab">${t.label}</span><span class="dot"></span></button>`;
     }).join('');
   }else{tb.hidden=true;tb.innerHTML='';}
 }
