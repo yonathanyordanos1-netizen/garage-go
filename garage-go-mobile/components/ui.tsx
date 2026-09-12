@@ -13,8 +13,10 @@ export function PrimaryButton({
   label: string; onPress: () => void; loading?: boolean; disabled?: boolean;
   style?: ViewStyle; variant?: 'forest' | 'terra' | 'ink';
 }) {
-  const bg = variant === 'terra' ? colors.terra : variant === 'ink' ? colors.ink : colors.forest;
-  const fg = variant === 'terra' ? '#3A1D12' : colors.white;
+  // Accent (sand) buttons take Raw Umber text for AA contrast; the umber
+  // button takes Bone White text.
+  const bg = variant === 'ink' ? colors.ink : colors.forest;
+  const fg = variant === 'ink' ? colors.white : colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -117,14 +119,14 @@ export function Chip({ label, active, onPress }: { label: string; active?: boole
 export function Tag({ label }: { label: string }) {
   return (
     <View style={styles.tag}>
-      <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#5A564C' }}>{label}</Text>
+      <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#3A2A1D' }}>{label}</Text>
     </View>
   );
 }
 
 // Illustrated placeholder thumbnail (matches the prototype's earthy garage card art).
 export function GarageThumb({ width, height, seed = 0 }: { width: number | string; height: number; seed?: number }) {
-  const hues = ['#E4E0D6', '#E7EBDD', '#EFE2D6', '#E3E7DD'];
+  const hues = ['#F0EDE7', '#ECE8E1', '#F1EDE6', '#EEEAE3'];
   const g = hues[seed % hues.length];
   const id = 'gt' + seed;
   return (
@@ -132,16 +134,16 @@ export function GarageThumb({ width, height, seed = 0 }: { width: number | strin
       <Defs>
         <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={g} />
-          <Stop offset="1" stopColor="#F3ECDD" />
+          <Stop offset="1" stopColor="#F6F3EE" />
         </LinearGradient>
       </Defs>
       <Rect width={220} height={120} fill={`url(#${id})`} />
       <Rect x={24} y={52} width={172} height={42} rx={6} fill="#fff" opacity={0.5} />
-      <Rect x={24} y={34} width={172} height={20} rx={4} fill="#C9C2AE" opacity={0.6} />
-      <Path d="M40 88h30l6-14h20l6 14h30" fill="none" stroke="#2D4F1E" strokeWidth={3} strokeLinecap="round" opacity={0.5} />
-      <Circle cx={70} cy={90} r={7} fill="#2E2B25" opacity={0.22} />
-      <Circle cx={150} cy={90} r={7} fill="#2E2B25" opacity={0.22} />
-      <Circle cx={176} cy={28} r={10} fill="#E27D60" opacity={0.5} />
+      <Rect x={24} y={34} width={172} height={20} rx={4} fill="#D8D2C8" opacity={0.6} />
+      <Path d="M40 88h30l6-14h20l6 14h30" fill="none" stroke="#3A2A1D" strokeWidth={3} strokeLinecap="round" opacity={0.5} />
+      <Circle cx={70} cy={90} r={7} fill="#3A2A1D" opacity={0.22} />
+      <Circle cx={150} cy={90} r={7} fill="#3A2A1D" opacity={0.22} />
+      <Circle cx={176} cy={28} r={10} fill="#C29B74" opacity={0.55} />
     </Svg>
   );
 }
@@ -158,5 +160,5 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 13.5, color: colors.ink, padding: 0 },
   prefix: { fontVariant: ['tabular-nums'], fontSize: 13.5, fontWeight: '600', color: colors.ink2, paddingRight: 9, borderRightWidth: 1, borderRightColor: colors.line },
   chip: { borderWidth: 1, borderRadius: radius.pill, height: 34, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
-  tag: { backgroundColor: '#EFE7D5', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4 },
+  tag: { backgroundColor: '#E6E4E0', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4 },
 });

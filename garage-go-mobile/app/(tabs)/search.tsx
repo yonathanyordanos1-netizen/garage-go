@@ -39,7 +39,7 @@ export default function Search() {
           <Icon name="pin" size={18} color={colors.terra} strokeWidth={2} />
           <TextInput defaultValue="Bole, Addis Ababa" accessibilityLabel="Search location"
             style={{ flex: 1, fontSize: 13.5, color: colors.ink, padding: 0 }} />
-          <Text style={{ fontSize: 11.5, color: colors.forest, fontWeight: '600' }}>Change</Text>
+          <Text style={{ fontSize: 11.5, color: colors.muted, fontWeight: '600' }}>Change</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }} contentContainerStyle={{ gap: 8 }}>
           {CHIPS.map((c, i) => (
@@ -54,7 +54,7 @@ export default function Search() {
         <Text style={{ fontSize: 12.5, color: colors.muted }}>{filtered.length} garages nearby</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
           <Icon name="filter" size={15} color={colors.forest} />
-          <Text style={{ fontSize: 12.5, color: colors.forest, fontWeight: '600' }}>Sort: Distance</Text>
+          <Text style={{ fontSize: 12.5, color: colors.muted, fontWeight: '600' }}>Sort: Distance</Text>
         </View>
       </View>
 
@@ -72,14 +72,14 @@ export default function Search() {
                   <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />
                 </View>
                 <Text style={{ marginTop: 3, fontSize: 11.5, color: colors.muted }}>{g.area} · {dist}</Text>
-                <Text style={{ marginTop: 2, fontSize: 11, color: colors.forest, fontWeight: '600' }}>{g.hours}</Text>
+                <Text style={{ marginTop: 2, fontSize: 11, color: colors.success, fontWeight: '600' }}>{g.hours}</Text>
                 <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Icon name="star" size={12} color={colors.terra} />
                     <Text style={{ fontSize: 11.5, fontWeight: '600', color: colors.ink }}>{g.rating}</Text>
                     <Text style={{ fontSize: 11.5, color: colors.faint }}>({g.reviews_count})</Text>
                   </View>
-                  <Text style={{ fontSize: 11.5, fontWeight: '700', color: colors.forest }}>From {g.price_from} ETB</Text>
+                  <Text style={{ fontSize: 11.5, fontWeight: '700', color: colors.ink }}>From {g.price_from} ETB</Text>
                 </View>
               </View>
             </Pressable>

@@ -4,8 +4,11 @@ An Ethiopian garage-reservation & roadside-assistance mobile app, built with
 **React Native + Expo** and a live **Supabase** backend. This is the **customer**
 app; the service-provider app (garage owners, mechanics, admin) is a separate build.
 
-The UI uses the **Earthy & Organic** palette — Forest Green `#2D4F1E`,
-Terracotta `#E27D60`, Warm Beige `#F5E6CC`, Slate Grey `#4A4A4A`.
+The UI uses the **Warm Editorial Minimal** palette (60 / 30 / 10):
+Bone White `#FDFDFB` (surfaces), Raw Umber `#3A2A1D` (text, structure, dark
+surfaces), Muted Sand `#C29B74` (accent — active states, CTAs, badges, ring fill),
+with derived clay `#A15C4F` (error) and sage `#7A8B6F` (success). Typography
+(Inter / Outfit), spacing, radii and shadows are unchanged from the tokens.
 
 ---
 
@@ -121,6 +124,45 @@ components/
 ```
 
 ---
+
+## Theme, tab bar & Welcome update
+
+**Warm Editorial Minimal palette** — applied end-to-end (`lib/theme.ts` is the
+single source; every hardcoded hex in screens/components/icons was swapped too, so
+no previous colour remains). Only colour changed; type, spacing, radii and shadows
+are the original token values.
+- `bg / surfaces` → Bone White `#FDFDFB`
+- `text / icons / borders / dark cards` → Raw Umber `#3A2A1D` (secondary text at
+  ~62% / ~42% over bone)
+- `accent` → Muted Sand `#C29B74` — active tab, selected slot, badges, progress
+  ring, CTA backgrounds
+- **Accessibility note:** Muted Sand on Bone White is ~1.9:1, so it is never used as
+  text on light. Text on a sand CTA is Raw Umber (5.4:1, AA ✓); links use muted
+  umber; dark cards are Raw Umber with Bone text (~12:1).
+
+**Bottom tab bar** (`app/(tabs)/_layout.tsx`) — rebuilt as a custom `tabBar`:
+Bone background, a 1px warm top hairline (`rgba(58,42,29,0.10)`), upward `shadow-lg`
+elevation, icon-over-label layout with refined hit areas, safe-area padding, and an
+active state in Muted Sand (icon + label + a sand wash pill behind the icon).
+Inactive is Raw Umber @ 55%. Tab order unchanged: Home · Garages · Market · Profile.
+Each tab keeps `accessibilityRole="button"`, `accessibilityState.selected`, and an
+`accessibilityLabel`.
+
+**Garage icon** — new outlined garage-door + service-line icon matching the set
+(stroke = currentColor, 1.5 width, 24×24). Source in `assets/icons/Garage.svg`,
+added to the runtime set as `name="garage"` in `lib/icons.tsx`, and re-exported from
+`components/IconSet.tsx` (`GarageIcon`). The Garages tab now uses it instead of the
+generic car glyph.
+
+**Welcome screen** (`app/welcome.tsx`) — redesigned from Dribbble references
+(car-service onboarding: LuxAuto, GoCab, Vehix): warm-whitespace hero with a
+umber line-art car/garage illustration and sand accents, a Raw Umber headline
+("Welcome to Garage Go"), a **feature carousel** (Book a Garage · Emergency Help ·
+Roadside & Towing) with sand progress dots, and a **staggered fade-in** entrance
+(RN `Animated`, no new libraries). Keeps Skip, the Get started CTA, the Sign in
+link, all accessibility labels, and a mobile-first layout that centres to a 480px
+max width on larger screens. Per the two-app split this is the **customer** app, so
+there is no role picker.
 
 ## Design preservation note
 

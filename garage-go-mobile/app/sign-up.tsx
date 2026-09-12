@@ -81,5 +81,5 @@ const styles = StyleSheet.create({
   subtle: { marginTop: 3, fontSize: 12.5, color: colors.muted },
   fieldLabel: { fontSize: 11.5, fontWeight: '600', color: colors.ink2 },
   footer: { marginTop: 22, textAlign: 'center', fontSize: 13, color: colors.muted },
-  link: { fontWeight: '700', color: colors.forest },
+  link: { fontWeight: '700', color: colors.ink },
 });

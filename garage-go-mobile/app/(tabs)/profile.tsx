@@ -51,7 +51,7 @@ export default function Profile() {
       <View style={styles.pointsCard}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View>
-            <Text style={{ fontSize: 11.5, color: '#C9BE9E' }}>Garage Go points</Text>
+            <Text style={{ fontSize: 11.5, color: '#EDE9E3' }}>Garage Go points</Text>
             <Text style={styles.points}>{profile?.points ?? 0}</Text>
           </View>
           <Pressable accessibilityRole="button" onPress={() => toast('Rewards coming soon')} style={styles.rewardBtn}>
@@ -62,7 +62,7 @@ export default function Profile() {
           {[[String(bookingCount), 'Bookings'], ['6', 'Saved'], ['4.9', 'Rating']].map(([v, k]) => (
             <View key={k}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>{v}</Text>
-              <Text style={{ marginTop: 1, fontSize: 10.5, color: '#C9BE9E' }}>{k}</Text>
+              <Text style={{ marginTop: 1, fontSize: 10.5, color: '#EDE9E3' }}>{k}</Text>
             </View>
           ))}
         </View>
@@ -72,13 +72,13 @@ export default function Profile() {
         {MENU.map((m, i) => (
           <Pressable key={m.t} accessibilityRole="button" accessibilityLabel={m.t}
             onPress={() => m.t === 'Booking history' ? router.push('/(tabs)/search') : toast(m.t)}
-            style={[styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: '#EFE7D5' }]}>
+            style={[styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: '#E6E4E0' }]}>
             <View style={styles.rowIcon}><Icon name={m.icon} size={18} color={colors.ink2} /></View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13.5, fontWeight: '600', color: colors.ink }}>{m.t}</Text>
               <Text style={{ fontSize: 11.5, color: colors.muted }}>{m.d}</Text>
             </View>
-            <Icon name="chevR" size={16} color="#CBC2AC" />
+            <Icon name="chevR" size={16} color="#DEDBD7" />
           </Pressable>
         ))}
       </View>
@@ -91,13 +91,13 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  avatar: { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: colors.ground, fontWeight: '700', fontSize: 28 },
   name: { marginTop: 12, fontSize: 21, fontWeight: '700', color: colors.ink },
   sub: { marginTop: 3, fontSize: 12.5, color: colors.muted },
-  pointsCard: { marginHorizontal: 16, marginTop: 18, backgroundColor: colors.forest, borderRadius: 22, padding: 18 },
+  pointsCard: { marginHorizontal: 16, marginTop: 18, backgroundColor: colors.surface, borderRadius: 22, padding: 18 },
   points: { fontSize: 34, fontWeight: '800', color: colors.terra, lineHeight: 36 },
-  rewardBtn: { borderWidth: 1, borderColor: 'rgba(245,230,204,0.24)', backgroundColor: 'rgba(245,230,204,0.08)', borderRadius: 11, height: 36, paddingHorizontal: 13, alignItems: 'center', justifyContent: 'center' },
+  rewardBtn: { borderWidth: 1, borderColor: 'rgba(253,253,251,0.24)', backgroundColor: 'rgba(253,253,251,0.08)', borderRadius: 11, height: 36, paddingHorizontal: 13, alignItems: 'center', justifyContent: 'center' },
   menu: { marginHorizontal: 16, marginTop: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 20, overflow: 'hidden' },
   row: { paddingHorizontal: 15, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' },

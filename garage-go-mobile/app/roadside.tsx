@@ -61,18 +61,18 @@ export default function Roadside() {
             <Text style={{ fontSize: 12.5, color: colors.ink, fontWeight: '600' }}>Ring Road, near Lebu</Text>
             <Text style={{ fontSize: 11, color: colors.muted }}>Location shared · accurate to 12 m</Text>
           </View>
-          <Text style={{ fontSize: 11.5, color: colors.forest, fontWeight: '600' }}>Update</Text>
+          <Text style={{ fontSize: 11.5, color: colors.muted, fontWeight: '600' }}>Update</Text>
         </View>
 
         <Text style={styles.h2}>What do you need?</Text>
         <View style={styles.grid}>
           {OPTS.map((o, i) => {
             const on = sel === i;
-            const bg = o.dark ? colors.forest : colors.card;
+            const bg = o.dark ? colors.surface : colors.card;
             const ink = o.dark ? '#fff' : colors.ink;
             return (
               <Pressable key={o.t} onPress={() => setSel(i)} style={[styles.opt, { backgroundColor: bg, borderColor: on ? colors.forest : colors.line2, borderWidth: on ? 2 : 1 }]}>
-                <View style={[styles.optIcon, { backgroundColor: o.dark ? 'rgba(245,230,204,0.16)' : colors.forestTint }]}>
+                <View style={[styles.optIcon, { backgroundColor: o.dark ? 'rgba(253,253,251,0.16)' : colors.forestTint }]}>
                   <Icon name={o.icon} size={20} color={o.dark ? colors.ground : colors.forest} strokeWidth={2} />
                 </View>
                 <View>
@@ -101,7 +101,7 @@ export default function Roadside() {
               </View>
               <View style={styles.etaPill}>
                 <Icon name="clock" size={11} color={colors.forest} strokeWidth={2.2} />
-                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.forest }}>{p.eta}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.ink }}>{p.eta}</Text>
               </View>
             </View>
           ))}

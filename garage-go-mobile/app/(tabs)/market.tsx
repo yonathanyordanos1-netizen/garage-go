@@ -57,7 +57,7 @@ export default function Market() {
               <View style={{ padding: 12 }}>
                 <Text numberOfLines={2} style={{ fontSize: 12.5, fontWeight: '600', color: colors.ink }}>{p.name}</Text>
                 <Text style={{ marginTop: 4, fontSize: 10.5, color: colors.muted }}>{p.category}</Text>
-                <Text style={{ marginTop: 7, fontSize: 14, fontWeight: '800', color: colors.forest }}>{p.price.toLocaleString()} ETB</Text>
+                <Text style={{ marginTop: 7, fontSize: 14, fontWeight: '800', color: colors.ink }}>{p.price.toLocaleString()} ETB</Text>
               </View>
             </View>
           ))}
@@ -79,5 +79,5 @@ const styles = StyleSheet.create({
   grid: { paddingHorizontal: 16, paddingTop: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: { width: '47%', flexGrow: 1, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, borderRadius: 18, overflow: 'hidden' },
   tag: { position: 'absolute', top: 8, left: 8, backgroundColor: colors.terra, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  fab: { position: 'absolute', right: 18, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: colors.forest, borderRadius: 16, height: 52, paddingHorizontal: 20, shadowColor: colors.forest, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 10 }, elevation: 8 },
+  fab: { position: 'absolute', right: 18, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: colors.surface, borderRadius: 16, height: 52, paddingHorizontal: 20, shadowColor: colors.forest, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 10 }, elevation: 8 },
 });

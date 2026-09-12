@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#2D4F1E",
+      "backgroundColor": "#3A2A1D",
       "resizeMode": "contain"
     },
     "ios": {
@@ -17,7 +17,7 @@
     "android": {
       "package": "com.garagego.app",
       "adaptiveIcon": {
-        "backgroundColor": "#2D4F1E"
+        "backgroundColor": "#3A2A1D"
       }
     },
     "plugins": ["expo-router"],

@@ -117,13 +117,13 @@ export default function SignIn() {
 
 const styles = StyleSheet.create({
   back: { width: 40, height: 40, borderRadius: 13, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   h1: { fontSize: 23, fontWeight: '800', color: colors.ink, letterSpacing: -0.4 },
   subtle: { marginTop: 2, fontSize: 12.5, color: colors.muted },
   fieldLabel: { fontSize: 11.5, fontWeight: '600', color: colors.ink2 },
-  tabs: { marginTop: 22, flexDirection: 'row', gap: 4, backgroundColor: '#EBDFC6', borderRadius: 13, padding: 4 },
+  tabs: { marginTop: 22, flexDirection: 'row', gap: 4, backgroundColor: '#F0ECE5', borderRadius: 13, padding: 4 },
   tab: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   tabOn: { backgroundColor: colors.card },
   footer: { marginTop: 22, textAlign: 'center', fontSize: 13, color: colors.muted },
-  link: { fontWeight: '700', color: colors.forest },
+  link: { fontWeight: '700', color: colors.ink },
 });

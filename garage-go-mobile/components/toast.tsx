@@ -32,7 +32,7 @@ export const useToast = () => useContext(ToastContext);
 const styles = StyleSheet.create({
   toast: {
     position: 'absolute', top: 64, alignSelf: 'center', zIndex: 100,
-    backgroundColor: colors.forest, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11,
+    backgroundColor: colors.surface, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11,
     shadowColor: colors.forest, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
   text: { color: colors.ground, fontSize: 13, fontWeight: '600' },

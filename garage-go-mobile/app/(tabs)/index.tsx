@@ -80,7 +80,7 @@ export default function Home() {
       <View style={styles.darkCard}>
         <View style={{ width: 48, height: 48 }}>
           <Svg width={48} height={48} viewBox="0 0 48 48">
-            <Circle cx={24} cy={24} r={20} fill="none" stroke="rgba(245,230,204,0.16)" strokeWidth={5} />
+            <Circle cx={24} cy={24} r={20} fill="none" stroke="rgba(253,253,251,0.16)" strokeWidth={5} />
             <Circle cx={24} cy={24} r={20} fill="none" stroke={colors.terra} strokeWidth={5} strokeLinecap="round"
               strokeDasharray={125.6} strokeDashoffset={38} transform="rotate(-90 24 24)" />
           </Svg>
@@ -93,7 +93,7 @@ export default function Home() {
           </View>
           <Text style={styles.plate}>AA-3-12345 · service in 1,200 km</Text>
         </View>
-        <Icon name="chevR" size={15} color="#A69C7E" />
+        <Icon name="chevR" size={15} color="#B8AFA0" />
       </View>
 
       {/* Popular garages */}
@@ -133,7 +133,7 @@ export default function Home() {
         <Icon name="birr" size={28} color={colors.terra} strokeWidth={2} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>100 ETB reservation fee</Text>
-          <Text style={{ marginTop: 3, fontSize: 11, color: '#C9BE9E' }}>50 ETB to Garage Go · 50 ETB to your garage. Repairs paid on site.</Text>
+          <Text style={{ marginTop: 3, fontSize: 11, color: '#EDE9E3' }}>50 ETB to Garage Go · 50 ETB to your garage. Repairs paid on site.</Text>
         </View>
       </View>
     </ScrollView>
@@ -143,19 +143,19 @@ export default function Home() {
 const styles = StyleSheet.create({
   hello: { marginTop: 8, fontSize: 26, fontWeight: '700', color: colors.ink, letterSpacing: -0.6 },
   iconBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...shadow.card },
-  avatar: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: colors.ground, fontWeight: '700', fontSize: 15 },
   searchBar: { marginTop: 18, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 15, height: 50 },
   quickRow: { paddingHorizontal: 16, paddingTop: 22, flexDirection: 'row', gap: 10 },
   quickChip: { width: 58, height: 58, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   quickLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center', color: colors.ink2 },
-  darkCard: { marginHorizontal: 16, marginTop: 22, backgroundColor: colors.forest, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 13 },
+  darkCard: { marginHorizontal: 16, marginTop: 22, backgroundColor: colors.surface, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 13 },
   ring: { position: 'absolute', width: 48, height: 48, textAlign: 'center', lineHeight: 48, fontSize: 11.5, fontWeight: '700', color: '#fff' },
-  plate: { marginTop: 3, fontSize: 11, color: '#C9BE9E' },
+  plate: { marginTop: 3, fontSize: 11, color: '#EDE9E3' },
   sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.ink },
-  seeAll: { fontSize: 12.5, fontWeight: '600', color: colors.forest },
+  seeAll: { fontSize: 12.5, fontWeight: "600", color: colors.muted },
   gCard: { width: 204, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, borderRadius: 18, overflow: 'hidden' },
-  ratingPill: { position: 'absolute', top: 9, left: 9, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(46,43,37,0.86)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  feeCard: { marginHorizontal: 16, marginTop: 24, backgroundColor: colors.forest, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  ratingPill: { position: 'absolute', top: 9, left: 9, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(58,42,29,0.86)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  feeCard: { marginHorizontal: 16, marginTop: 24, backgroundColor: colors.surface, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
 });

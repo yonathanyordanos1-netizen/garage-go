@@ -143,7 +143,7 @@ export default function GarageProfile() {
               const on = service === i;
               return (
                 <Pressable key={s.id} onPress={() => setService(i)} style={[styles.serviceRow, { borderColor: on ? colors.forest : colors.line, backgroundColor: on ? colors.forestTint2 : colors.card }]}>
-                  <View style={[styles.radio, { borderColor: on ? colors.forest : '#CBC2AC', backgroundColor: on ? colors.forest : colors.card }]}>
+                  <View style={[styles.radio, { borderColor: on ? colors.forest : '#DEDBD7', backgroundColor: on ? colors.forest : colors.card }]}>
                     {on ? <Icon name="check" size={12} color="#fff" strokeWidth={3} /> : null}
                   </View>
                   <View style={{ flex: 1 }}>
@@ -163,7 +163,7 @@ export default function GarageProfile() {
               const on = day === i;
               return (
                 <Pressable key={n} onPress={() => setDay(i)} style={[styles.day, { borderColor: on ? colors.ink : colors.line2, backgroundColor: on ? colors.ink : colors.card }]}>
-                  <Text style={{ fontSize: 10.5, color: on ? '#B7AE90' : colors.faint }}>{d}</Text>
+                  <Text style={{ fontSize: 10.5, color: on ? '#C9C2B4' : colors.faint }}>{d}</Text>
                   <Text style={{ fontSize: 16, fontWeight: '700', color: on ? '#fff' : colors.ink }}>{n}</Text>
                 </Pressable>
               );
@@ -178,8 +178,8 @@ export default function GarageProfile() {
               const on = slot === i && !off;
               return (
                 <Pressable key={t} disabled={off} onPress={() => setSlot(i)}
-                  style={[styles.slot, { borderColor: on ? colors.forest : colors.line2, backgroundColor: on ? colors.forestTint : off ? '#EFE9DC' : colors.card }]}>
-                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: on ? colors.forest : off ? '#B9B19C' : colors.ink2 }}>{t}</Text>
+                  style={[styles.slot, { borderColor: on ? colors.forest : colors.line2, backgroundColor: on ? colors.forestTint : off ? '#F1EDE7' : colors.card }]}>
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: on ? colors.ink : off ? '#ABA49E' : colors.ink2 }}>{t}</Text>
                 </Pressable>
               );
             })}
@@ -205,7 +205,7 @@ export default function GarageProfile() {
           <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>100 ETB</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Pay 100 ETB reservation fee" onPress={() => setSheet(true)} style={styles.payBtn}>
-          <Text style={{ color: '#fff', fontSize: 14.5, fontWeight: '700' }}>Pay 100 ETB</Text>
+          <Text style={{ color: colors.ink, fontSize: 14.5, fontWeight: '700' }}>Pay 100 ETB</Text>
         </Pressable>
       </View>
 
@@ -222,7 +222,7 @@ export default function GarageProfile() {
           ) : (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={styles.tbLogo}><Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>T</Text></View>
+                <View style={styles.tbLogo}><Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13 }}>T</Text></View>
                 <View>
                   <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Pay with Telebirr</Text>
                   <Text style={{ fontSize: 12, color: colors.muted }}>100 ETB reservation fee</Text>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   payBtn: { backgroundColor: colors.forest, borderRadius: 14, height: 52, paddingHorizontal: 26, alignItems: 'center', justifyContent: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(30,26,20,0.5)' },
   paySheet: { backgroundColor: colors.ground, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 18 },
-  grabber: { width: 40, height: 5, borderRadius: 999, backgroundColor: '#D6CBB2', alignSelf: 'center', marginBottom: 14 },
+  grabber: { width: 40, height: 5, borderRadius: 999, backgroundColor: '#DEDBD7', alignSelf: 'center', marginBottom: 14 },
   tbLogo: { width: 42, height: 42, borderRadius: 12, backgroundColor: colors.terra, alignItems: 'center', justifyContent: 'center' },
   tbRow: { borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, borderRadius: 15, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 12 },
   tbIcon: { width: 40, height: 40, borderRadius: 11, backgroundColor: colors.terraTint, alignItems: 'center', justifyContent: 'center' },

@@ -35,16 +35,16 @@ export default function Emergency() {
         <Text style={styles.h1}>Emergency mechanic</Text>
       </View>
 
-      <LinearGradient colors={['#E27D60', '#CE6A4E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.banner}>
+      <LinearGradient colors={['#3A2A1D', '#2E2013']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.banner}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Icon name="bolt" size={15} color="#fff" strokeWidth={2.4} />
-          <Text style={{ fontSize: 12, fontWeight: '600', color: '#fff' }}>STRANDED?</Text>
+          <Icon name="bolt" size={15} color={colors.terra} strokeWidth={2.4} />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.terra, letterSpacing: 0.4 }}>STRANDED?</Text>
         </View>
         <Text style={styles.bannerTitle}>I need a mechanic{'\n'}now</Text>
         <Text style={styles.bannerSub}>Share your location and we'll dispatch the nearest verified mechanic.</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Get Emergency Help" onPress={() => toast('Locating nearby mechanics…')} style={styles.locateBtn}>
-          <Icon name="pin" size={17} color="#B14B2E" strokeWidth={2} />
-          <Text style={{ color: '#B14B2E', fontSize: 13.5, fontWeight: '700' }}>Locate me & dispatch</Text>
+          <Icon name="pin" size={17} color="#3A2A1D" strokeWidth={2} />
+          <Text style={{ color: '#3A2A1D', fontSize: 13.5, fontWeight: '700' }}>Locate me & dispatch</Text>
         </Pressable>
       </LinearGradient>
 
@@ -63,7 +63,7 @@ export default function Emergency() {
                   <Text style={{ marginTop: 2, fontSize: 11.5, color: colors.muted }}>{m.area} · {m.experience} exp</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <View style={styles.etaPill}><Text style={{ fontSize: 11, fontWeight: '700', color: colors.forest }}>{etas[i] ?? '—'}</Text></View>
+                  <View style={styles.etaPill}><Text style={{ fontSize: 11, fontWeight: '700', color: colors.ink }}>{etas[i] ?? '—'}</Text></View>
                   <Text style={{ marginTop: 4, fontSize: 10.5, color: colors.faint }}>{dists[i] ?? ''}</Text>
                 </View>
               </View>
@@ -72,7 +72,7 @@ export default function Emergency() {
               </ScrollView>
               <View style={{ marginTop: 11, flexDirection: 'row', gap: 8 }}>
                 <Pressable accessibilityRole="button" onPress={() => toast('Requesting ' + m.name + '…')} style={styles.requestBtn}>
-                  <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>Request now</Text>
+                  <Text style={{ color: colors.ink, fontSize: 12.5, fontWeight: '700' }}>Request now</Text>
                 </Pressable>
                 <Pressable accessibilityRole="button" accessibilityLabel={'Call ' + m.name} onPress={() => Linking.openURL('tel:' + m.phone.replace(/\s/g, ''))} style={styles.callBtn}>
                   <Icon name="phone" size={18} color={colors.ink2} />

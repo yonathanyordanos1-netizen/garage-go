@@ -7,7 +7,7 @@ export type IconName =
   | 'check' | 'clock' | 'heart' | 'wallet' | 'help' | 'gear' | 'home'
   | 'bag' | 'user' | 'chat' | 'chevL' | 'chevR' | 'mail' | 'lock'
   | 'eye' | 'eyeoff' | 'apple' | 'pin' | 'bell' | 'search' | 'filter'
-  | 'star' | 'shield' | 'birr' | 'phone';
+  | 'star' | 'shield' | 'birr' | 'phone' | 'garage';
 
 type Props = { name: IconName; size?: number; color?: string; strokeWidth?: number };
 
@@ -141,6 +141,14 @@ export function Icon({ name, size = 20, color = colors.ink2, strokeWidth = 1.9 }
         return <Path d="M9 5.5h4.2a3.4 3.4 0 0 1 0 6.8H9zM9 12.3h4.6a3.6 3.6 0 0 1 0 6.2H9zM9 3.2v17.6" stroke={color} strokeWidth={strokeWidth} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
       case 'phone':
         return p('M6 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z');
+      case 'garage':
+        // Garage building with a roll-up door + service line — matches the set.
+        return (<>
+          {p('M3.2 10.4 12 4.2l8.8 6.2')}
+          {p('M5.3 9.8V20h13.4V9.8')}
+          <Rect x={8} y={13.4} width={8} height={6.6} rx={1} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M8 16.7h8')}
+        </>);
       default:
         return null;
     }
