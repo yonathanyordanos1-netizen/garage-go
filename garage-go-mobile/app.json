@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Garage Go",
+    "slug": "garage-go",
+    "version": "1.0.0",
+    "scheme": "garagego",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#2D4F1E",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.garagego.app"
+    },
+    "android": {
+      "package": "com.garagego.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#2D4F1E"
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

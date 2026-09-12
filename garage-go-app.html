@@ -1,0 +1,567 @@
+<title>Garage Go</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#F5E6CC;            /* Warm Beige */
+    --card:#FFFDF7;
+    --ink:#2E2B25;              /* warm charcoal (headings) */
+    --ink2:#4A4A4A;             /* Slate Grey (body) */
+    --muted:#8A8478;
+    --faint:#B3AC9C;
+    --line:#E7DCC4;
+    --line2:#DED2B8;
+    --forest:#2D4F1E;           /* Forest Green */
+    --forest-d:#24401A;
+    --forest-l:#3D6329;
+    --forest-t:#EAF0E4;         /* light forest tint */
+    --forest-t2:#EEF3E7;
+    --terra:#E27D60;            /* Terracotta */
+    --terra-d:#CE6A4E;
+    --terra-t:#FBEDE6;
+    --slate:#4A4A4A;            /* Slate Grey */
+    --slate-l:#6E6E6E;
+    font-family:Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:#2A2A28;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 12px;
+    background-image:radial-gradient(circle at 50% 0,#3a3a34 0,#222220 70%);
+  }
+  .phone{
+    width:390px;height:844px;border-radius:46px;position:relative;
+    background:var(--ground);overflow:hidden;color:var(--ink);
+    box-shadow:0 40px 90px rgba(0,0,0,.4),0 0 0 11px #16130F,0 0 0 12px #2A2620;
+  }
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:34px;border-radius:22px;background:#000;z-index:60}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:52px;z-index:55;display:flex;align-items:center;justify-content:space-between;padding:19px 30px 0;pointer-events:none}
+  .statusbar .t{font:600 15px -apple-system,system-ui;letter-spacing:.3px}
+  .statusbar .icons{display:flex;gap:7px;align-items:center}
+  .stage{position:absolute;inset:0;overflow:hidden}
+  .scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .scr::-webkit-scrollbar{width:0;height:0}
+  .scr{scrollbar-width:none}
+  .hbar::-webkit-scrollbar{height:0}
+  .hbar{scrollbar-width:none}
+
+  @keyframes ggRise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .gg-rise{animation:ggRise .34s cubic-bezier(.22,.68,0,1) both}
+  @keyframes ggPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  .gg-t{transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
+  .gg-t:active{transform:scale(.975)}
+  button{font-family:inherit}
+  input,textarea{font-family:inherit}
+  :focus-visible{outline:2.5px solid var(--forest);outline-offset:2px;border-radius:8px}
+  @media (prefers-reduced-motion:reduce){.gg-rise{animation:none}.gg-t{transition:none}}
+
+  .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:40;
+    padding:9px 14px calc(9px + env(safe-area-inset-bottom));
+    background:rgba(245,230,204,.86);backdrop-filter:blur(18px) saturate(150%);
+    -webkit-backdrop-filter:blur(18px) saturate(150%);
+    border-top:1px solid var(--line);display:flex;gap:4px}
+  .tab{flex:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 4px;color:var(--muted)}
+  .tab .lab{font-size:10px;font-weight:600}
+  .tab.on{color:var(--forest)}
+  .tab .dot{width:5px;height:5px;border-radius:99px;background:var(--forest);opacity:0}
+  .tab.on .dot{opacity:1}
+  .homeind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:99px;background:rgba(0,0,0,.2);z-index:70;pointer-events:none}
+</style>
+
+<div class="phone" role="application" aria-label="Garage Go prototype">
+  <div class="island"></div>
+  <div class="statusbar"><span class="t">9:41</span><span class="icons" id="sbicons"></span></div>
+  <div class="stage"><div class="scr" id="scr"></div></div>
+  <div class="tabbar" id="tabbar" hidden></div>
+  <div class="homeind"></div>
+</div>
+
+<script>
+/* ─────────── ICONS ─────────── */
+const P = {
+  wrench:'<path d="M14.7 6.3a4 4 0 0 1-5.2 5.2L5 16v3h3l4.5-4.5a4 4 0 0 0 5.2-5.2l-2.3 2.3-2.2-.5-.5-2.2 2.3-2.3z"/>',
+  car:'<path d="M4 13l1.4-4.2A2 2 0 0 1 7.3 7.5h9.4a2 2 0 0 1 1.9 1.3L20 13M4 13h16v4a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.5h-9V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 6a3 3 0 0 1 0 6M17 19a5.4 5.4 0 0 0-2-4.2"/>',
+  bolt:'<path d="M13 3 5 13h5l-1 8 8-10h-5l1-8z"/>',
+  truck:'<path d="M3 7h10v9H3zM13 10h4l3 3v3h-7zM3 16h10"/><circle cx="7" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/>',
+  battery:'<rect x="3" y="8" width="15" height="9" rx="2"/><path d="M18 11h2v3h-2M7 12.5h3M8.5 11v3"/>',
+  tire:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.4"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/>',
+  check:'<path d="M5 12.5 10 17l9-10"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  heart:'<path d="M12 20s-7-4.4-7-9.3A3.7 3.7 0 0 1 12 8a3.7 3.7 0 0 1 7-.3C19 12.6 12 20 12 20z"/>',
+  wallet:'<rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M16.5 13.5h1.5"/>',
+  help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.4 2.4 0 0 1 4.6.9c0 1.6-2.2 1.9-2.2 3.4M12 17h.01"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.3M12 19.2v2.3M4.4 7l2 1.1M17.6 15.9l2 1.1M4.4 17l2-1.1M17.6 8.1l2-1.1"/>',
+  home:'<path d="M4 11 12 4l8 7M6 9.5V19h12V9.5"/>',
+  bag:'<path d="M6 8h12l-1 11H7L6 8zM9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  user:'<circle cx="12" cy="8.5" r="3.5"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/>',
+  chat:'<path d="M4.5 6.5h15v10h-9l-4 3v-3h-2z"/>',
+  chevL:'<path d="M14.5 6 8.5 12l6 6"/>',
+  chevR:'<path d="M9.5 6l6 6-6 6"/>',
+  mail:'<rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="m4.5 7.5 7.5 5 7.5-5"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
+  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+  eyeoff:'<path d="M4 4l16 16M9.9 5.9A9.9 9.9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.3 4M6.3 8.2A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.6 9.6 0 0 0 3-.5M9.8 9.8a3 3 0 0 0 4.4 4.4"/>',
+  apple:'<path d="M15.8 12.4c0-2 1.6-2.9 1.7-3-.9-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7A3.9 3.9 0 0 0 5.7 10c-1.4 2.5-.4 6.2 1 8.2.7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.5.6 2.6.6 1.7-1 2.4-2a8.8 8.8 0 0 0 1.1-2.2c-.1 0-2.1-.8-2.1-3.2z" fill="currentColor" stroke="none"/><path d="M14 6.6a3.5 3.5 0 0 0 .8-2.6 3.6 3.6 0 0 0-2.3 1.2 3.3 3.3 0 0 0-.8 2.5 3 3 0 0 0 2.3-1.1z" fill="currentColor" stroke="none"/>',
+  pin:'<path d="M12 21s6.5-5.8 6.5-10.5a6.5 6.5 0 0 0-13 0C5.5 15.2 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/>',
+  bell:'<path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.5 1.5 5.5H5s1.5-1.5 1.5-5.5zM10 18.5a2 2 0 0 0 4 0"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+  filter:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+  star:'<path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8L12 4z" fill="currentColor" stroke="none"/>',
+  shield:'<path d="M12 3.5 19 6v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-2.5z"/><path d="m9 12 2 2 4-4"/>',
+  birr:'<path d="M9 5.5h4.2a3.4 3.4 0 0 1 0 6.8H9zM9 12.3h4.6a3.6 3.6 0 0 1 0 6.2H9zM9 3.2v17.6"/>',
+  phone:'<path d="M6 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/>',
+  navsig:'<path d="M4 20l7-16 3 8 3-2 3 10z"/>'
+};
+function ic(name,size,color,sw){
+  const s=size||18,c=color||'currentColor',w=sw||1.9;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name]||''}</svg>`;
+}
+document.getElementById('sbicons').innerHTML =
+  `<span style="color:var(--ink)">${ic('navsig',15,'var(--ink)',2.2)}</span>`+
+  `<svg width="16" height="12" viewBox="0 0 24 24" fill="#2E2B25" aria-hidden="true"><path d="M12 6.5c2.6 0 5 1 6.8 2.7l1.2-1.3A11 11 0 0 0 12 4.5 11 11 0 0 0 4 7.9L5.2 9.2A9.4 9.4 0 0 1 12 6.5zM12 11c1.4 0 2.7.5 3.6 1.5l1.2-1.3A7 7 0 0 0 12 9a7 7 0 0 0-4.8 2.2l1.2 1.3A5 5 0 0 1 12 11z"/><circle cx="12" cy="15.5" r="1.6"/></svg>`+
+  `<svg width="24" height="12" viewBox="0 0 26 13" aria-hidden="true"><rect x=".5" y=".5" width="21" height="12" rx="3.2" fill="none" stroke="#2E2B25" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#2E2B25"/><path d="M23.5 4.5v4c.8-.3 1.3-1 1.3-2s-.5-1.7-1.3-2z" fill="#2E2B25" fill-opacity=".4"/></svg>`;
+
+const GOOGLE = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-2 3.2-4.9 3.2-7.9z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.7c-1 .7-2.3 1.1-3.6 1.1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M6 14.4a6.6 6.6 0 0 1 0-4.2V7.4H2.3a11 11 0 0 0 0 9.8L6 14.4z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1A11 11 0 0 0 12 1 11 11 0 0 0 2.3 7.4L6 10.2c.9-2.6 3.2-4.8 6-4.8z"/></svg>`;
+
+/* ─────────── PALETTE (JS) ─────────── */
+const FOREST='#2D4F1E',FOREST_L='#3D6329',TERRA='#E27D60',SLATE='#4A4A4A',DARK='#2E2B25',MUTE='#8A8478';
+
+/* ─────────── DATA ─────────── */
+const garages=[
+  {name:'Bole Auto Care',area:'Bole',dist:'1.2 km',rating:'4.9',reviews:214,from:'650',hours:'Open · closes 8 PM',openFg:FOREST,tags:['Engine','Diagnostics','AC']},
+  {name:'Habesha Motors',area:'Kazanchis',dist:'2.8 km',rating:'4.7',reviews:168,from:'500',hours:'Open · closes 7 PM',openFg:FOREST,tags:['Electrical','Body work']},
+  {name:'Gerji Garage & Tyre',area:'Gerji',dist:'4.1 km',rating:'4.6',reviews:97,from:'420',hours:'Open · closes 9 PM',openFg:FOREST,tags:['Tyres','Suspension']},
+  {name:'Summit Car Clinic',area:'Summit',dist:'5.6 km',rating:'4.5',reviews:143,from:'700',hours:'Opens 8 AM tomorrow',openFg:'#B45309',tags:['Engine','Gearbox']},
+];
+const quick=[
+  {label:'Book garage',icon:'car',chip:FOREST,ink:'#fff',shadow:'rgba(45,79,30,.28)',go:'search'},
+  {label:'Find mechanic',icon:'users',chip:SLATE,ink:'#fff',shadow:'rgba(74,74,74,.22)',go:'emergency'},
+  {label:'Emergency',icon:'bolt',chip:TERRA,ink:'#fff',shadow:'rgba(226,125,96,.32)',go:'emergency'},
+  {label:'Towing',icon:'truck',chip:FOREST_L,ink:'#fff',shadow:'rgba(61,99,41,.3)',go:'roadside'},
+];
+const services=[
+  {n:'Full engine diagnostics',d:'45–60 min · OBD scan + report',p:'650'},
+  {n:'Oil & filter change',d:'30 min · parts extra',p:'480'},
+  {n:'Brake pad replacement',d:'1–2 hrs · labour only',p:'900'},
+  {n:'AC regas & check',d:'1 hr',p:'1,200'},
+];
+const days=[['Mon','15'],['Tue','16'],['Wed','17'],['Thu','18'],['Fri','19'],['Sat','20']];
+const slots=['08:30','10:00','11:30','14:00','15:30','17:00'];
+const mechanics=[
+  {name:'Abebe Tesfaye',phone:'+251 911 24 87 63',area:'Bole · Rwanda St.',exp:'12 yrs',eta:'6 min',dist:'1.4 km',tags:['Engine','Electrical','Battery']},
+  {name:'Kalkidan Bekele',phone:'+251 913 55 02 19',area:'Megenagna',exp:'8 yrs',eta:'11 min',dist:'3.2 km',tags:['Tyres','Brakes']},
+  {name:'Yonas Girma',phone:'+251 921 76 41 08',area:'CMC · Gerji',exp:'15 yrs',eta:'17 min',dist:'5.0 km',tags:['Gearbox','Diagnostics']},
+];
+const roadsideOpts=[
+  {t:'Towing',d:'Flatbed or hook',icon:'truck',bg:FOREST,ink:'#fff',chip:'rgba(245,230,204,.2)',cIn:'#F5E6CC'},
+  {t:'Battery jump',d:'Jump or replace',icon:'battery',bg:'#fff',ink:DARK,chip:'#EAF0E4',cIn:FOREST},
+  {t:'Tyre change',d:'Spare or patch',icon:'tire',bg:'#fff',ink:DARK,chip:'#EFE7D5',cIn:SLATE},
+  {t:'Other help',d:'Fuel, lockout, key',icon:'chat',bg:'#FBEDE6',ink:'#9A3412',chip:'#F3CBBB',cIn:'#B14B2E'},
+];
+const providers=[
+  {name:'Addis Tow 24/7',eta:'14 min',price:'1,800–2,400',rating:'4.8',type:'Flatbed truck'},
+  {name:'Lebu Roadside Crew',eta:'22 min',price:'1,500–2,000',rating:'4.6',type:'Hook truck'},
+];
+const products=[
+  {n:'Bosch S4 Battery',c:'Battery · 60Ah',p:'4,200',tag:'New'},
+  {n:'Michelin 195/65 R15',c:'Tyre · set of 4',p:'38,000',tag:'Popular'},
+  {n:'Total 5W-30 Synthetic',c:'Engine oil · 4L',p:'2,650',tag:'New'},
+  {n:'Brake pad set — Vitz',c:'Brakes · front',p:'1,900',tag:''},
+  {n:'LED headlight H4',c:'Lighting · pair',p:'1,450',tag:''},
+  {n:'OBD2 Scanner ELM327',c:'Tools · Bluetooth',p:'1,100',tag:'Deal'},
+];
+const profileMenu=[
+  {t:'My vehicles',d:'Toyota Vitz 2014 · +1 more',icon:'car'},
+  {t:'Booking history',d:'24 reservations',icon:'clock'},
+  {t:'Saved garages',d:'6 saved',icon:'heart'},
+  {t:'Payment methods',d:'Telebirr · CBE Birr',icon:'wallet'},
+  {t:'Help & support',d:'FAQ, chat, call center',icon:'help'},
+  {t:'Settings',d:'Language, notifications',icon:'gear'},
+];
+const telebirr=[
+  {n:'0987505315',owner:'Biniyam Zekariyas',label:'Primary'},
+  {n:'0997409105',owner:'Yonathan',label:'Secondary'},
+];
+
+/* ─────────── STATE + HELPERS ─────────── */
+const state={authTab:0,service:1,day:2,slot:1,chip:0,road:0,pw:false,pw2:false};
+const el=id=>document.getElementById(id);
+const scr=el('scr');
+function tealBtn(label,go,aria){
+  return `<button type="button" class="gg-t" onclick="nav('${go}')" aria-label="${aria||label}" style="width:100%;height:52px;border:0;border-radius:15px;background:var(--forest);color:#fff;font-family:Outfit,sans-serif;font-size:14.5px;font-weight:700;cursor:pointer">${label}</button>`;
+}
+function backBtn(go,aria){
+  return `<button type="button" class="gg-t" onclick="nav('${go}')" aria-label="${aria||'Back'}" style="width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:13px;display:grid;place-items:center;padding:11px;cursor:pointer;color:var(--ink2)">${ic('chevL',18)}</button>`;
+}
+function chipTag(txt,bg,fg){return `<span style="font-size:10.5px;font-weight:600;color:${fg||'#5A564C'};background:${bg||'#EFE7D5'};border-radius:999px;padding:4px 9px;white-space:nowrap">${txt}</span>`;}
+function garageThumb(w,h,seed){
+  const hues=['#E4E0D6','#E7EBDD','#EFE2D6','#E3E7DD'];
+  const g=hues[seed%hues.length];
+  return `<svg width="${w}" height="${h}" viewBox="0 0 220 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:block">
+    <defs><linearGradient id="gt${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g}"/><stop offset="1" stop-color="#F3ECDD"/></linearGradient></defs>
+    <rect width="220" height="120" fill="url(#gt${seed})"/>
+    <rect x="24" y="52" width="172" height="42" rx="6" fill="#fff" opacity=".5"/>
+    <rect x="24" y="34" width="172" height="20" rx="4" fill="#C9C2AE" opacity=".6"/>
+    <path d="M40 88h30l6-14h20l6 14h30" fill="none" stroke="#2D4F1E" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+    <circle cx="70" cy="90" r="7" fill="#2E2B25" opacity=".22"/><circle cx="150" cy="90" r="7" fill="#2E2B25" opacity=".22"/>
+    <circle cx="176" cy="28" r="10" fill="#E27D60" opacity=".5"/>
+  </svg>`;
+}
+
+/* ─────────── SCREENS ─────────── */
+const screens={};
+
+/* WELCOME — no role selection (this is the customer app) */
+screens.welcome=()=>`
+<div class="gg-rise" style="min-height:100%;display:flex;flex-direction:column;position:relative;padding:66px 22px 34px;
+  background:radial-gradient(120% 60% at 50% -10%,rgba(226,125,96,.20),transparent 60%),linear-gradient(160deg,#20361A 0%,#2D4F1E 60%,#3D6329 130%)">
+  <div style="position:absolute;inset:0;opacity:.5;pointer-events:none;background-image:radial-gradient(circle at 18% 24%,rgba(245,230,204,.07) 0 1px,transparent 1px),radial-gradient(circle at 62% 40%,rgba(245,230,204,.06) 0 1px,transparent 1px);background-size:26px 26px,34px 34px"></div>
+  <div style="display:flex;justify-content:flex-end;position:relative">
+    <button type="button" onclick="nav('home')" aria-label="Skip onboarding" style="border:0;background:none;font-size:13px;font-weight:600;color:#C9BE9E;cursor:pointer;padding:6px">Skip</button>
+  </div>
+  <div style="margin-top:26px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative">
+    <div style="position:relative;width:100px;height:100px;display:grid;place-items:center">
+      <span style="position:absolute;inset:0;border-radius:32px;background:rgba(245,230,204,.06);border:1px solid rgba(245,230,204,.16)"></span>
+      <span style="position:absolute;inset:15px;border-radius:24px;background:rgba(226,125,96,.16);border:1px solid rgba(226,125,96,.4);box-shadow:0 12px 34px rgba(226,125,96,.3)"></span>
+      <span style="position:relative;color:#F5E6CC">${ic('wrench',36,'#F5E6CC',2)}</span>
+    </div>
+    <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:31px;font-weight:800;color:#F5E6CC;letter-spacing:-.6px;line-height:1.08;text-wrap:balance">Welcome to<br>Garage Go</h1>
+    <p style="margin:13px 0 0;font-size:14px;line-height:1.55;color:#CDC3A6;max-width:280px">On-demand garages, mechanics and roadside help across Ethiopia — verified, transparent, one tap away.</p>
+    <div style="margin-top:18px;display:flex;gap:16px;color:#B7AE90;font-size:11.5px;font-weight:500">
+      <span style="display:flex;align-items:center;gap:5px">${ic('shield',14,'#E27D60',2)}Verified</span>
+      <span style="display:flex;align-items:center;gap:5px">${ic('birr',14,'#E27D60',2)}Flat 100 ETB</span>
+      <span style="display:flex;align-items:center;gap:5px">${ic('bolt',14,'#E27D60',2)}24/7</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:28px;position:relative">
+    <button type="button" onclick="nav('started')" class="gg-t" style="width:100%;height:54px;border:0;border-radius:16px;background:#E27D60;color:#3A1D12;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Get started</button>
+    <p style="margin:16px 0 0;text-align:center;font-size:13px;color:#C9BE9E">Already have an account? <button type="button" onclick="nav('signin')" style="border:0;background:none;font-size:13px;font-weight:700;color:#F5E6CC;cursor:pointer;padding:0">Sign in</button></p>
+    <div style="margin-top:18px;display:flex;gap:6px;justify-content:center">
+      ${[0,1,2].map(i=>`<span style="width:${i===0?18:6}px;height:6px;border-radius:99px;background:${i===0?'#E27D60':'rgba(245,230,204,.28)'}"></span>`).join('')}
+    </div>
+  </div>
+</div>`;
+
+/* GET STARTED */
+screens.started=()=>`
+<div class="gg-rise" style="min-height:100%;display:flex;flex-direction:column;background:var(--ground);padding:60px 22px 30px">
+  ${backBtn('welcome')}
+  <div style="margin-top:26px;height:220px;border-radius:24px;overflow:hidden;position:relative;background:linear-gradient(160deg,#EFE7D3,#E6DCC2)">
+    <svg viewBox="0 0 320 220" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-label="Illustration: a car being serviced at a garage">
+      <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1E9D3"/><stop offset="1" stop-color="#E6DCC1"/></linearGradient></defs>
+      <rect width="320" height="220" fill="url(#sky)"/>
+      <circle cx="255" cy="52" r="30" fill="#E27D60" opacity=".45"/>
+      <path d="M0 168h320" stroke="#CBBF9C" stroke-width="2" opacity=".6"/>
+      <rect x="30" y="70" width="120" height="86" rx="8" fill="#2D4F1E" opacity=".12"/>
+      <path d="M30 70h120M30 70l60-26 60 26" fill="none" stroke="#2D4F1E" stroke-width="3" opacity=".45"/>
+      <rect x="52" y="96" width="30" height="30" rx="4" fill="#2D4F1E" opacity=".2"/>
+      <rect x="98" y="96" width="30" height="30" rx="4" fill="#2D4F1E" opacity=".2"/>
+      <g>
+        <path d="M150 150c4-22 12-34 30-36h44c14 0 22 8 30 22l14 6c8 3 12 8 12 16v10c0 4-3 7-7 7H160c-6 0-10-4-10-10z" fill="#2D4F1E"/>
+        <path d="M186 118h34c10 0 16 6 20 16h-66c4-10 8-16 12-16z" fill="#E27D60" opacity=".9"/>
+        <circle cx="182" cy="168" r="15" fill="#2A2620"/><circle cx="182" cy="168" r="6" fill="#B7AE90"/>
+        <circle cx="256" cy="168" r="15" fill="#2A2620"/><circle cx="256" cy="168" r="6" fill="#B7AE90"/>
+      </g>
+      <g transform="translate(120 120) rotate(-25)" stroke="#E27D60" stroke-width="7" stroke-linecap="round" fill="none"><path d="M0 0h34"/><circle cx="42" cy="0" r="9" fill="#E27D60" stroke="none"/></g>
+      <g transform="translate(70 40)"><path d="M0 22C0 10 -9 0 -20 0S-40 10 -40 22c0 14 20 30 20 30S0 36 0 22z" transform="translate(40 0)" fill="#E27D60"/><circle cx="20" cy="20" r="7" fill="#fff"/></g>
+    </svg>
+  </div>
+  <h1 style="margin:26px 0 0;font-family:Outfit,sans-serif;font-size:27px;font-weight:800;color:var(--ink);letter-spacing:-.5px;line-height:1.12;text-wrap:balance">Your car, sorted<br>in three taps.</h1>
+  <p style="margin:12px 0 0;font-size:14px;line-height:1.55;color:var(--muted)">Find a verified garage near you, reserve a slot for a flat 100 ETB, and pay for the repair on site. Emergency mechanics and towing are one tap away.</p>
+  <div style="margin-top:20px;display:flex;flex-direction:column;gap:11px">
+    ${[['shield','Every garage & mechanic is verified'],['birr','Pay with Telebirr, CBE Birr or Amole'],['bolt','24/7 emergency help on the road']].map(([i,t])=>
+      `<div style="display:flex;align-items:center;gap:11px"><span style="width:34px;height:34px;flex:none;border-radius:11px;background:var(--forest-t);color:var(--forest);display:grid;place-items:center">${ic(i,17,'var(--forest)',2)}</span><span style="font-size:13px;color:var(--ink2)">${t}</span></div>`).join('')}
+  </div>
+  <div style="margin-top:auto;padding-top:22px">${tealBtn('Get started','signin','Get started button')}</div>
+</div>`;
+
+/* SIGN IN */
+screens.signin=()=>{
+  const tabs=['Email & password','Phone OTP'];
+  const tabHtml=tabs.map((t,i)=>{const on=state.authTab===i;return `<button type="button" onclick="setTab(${i})" aria-label="Sign in with ${t}" style="flex:1;border:0;background:${on?'#fff':'transparent'};color:${on?'var(--ink)':'var(--muted)'};box-shadow:${on?'0 2px 6px rgba(46,43,37,.1)':'none'};border-radius:10px;height:38px;font-size:12.5px;font-weight:600;cursor:pointer">${t}</button>`}).join('');
+  const emailFields=`
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Email</span>${field('mail','email','dawit@email.com','Sign in with email')}</label>
+    <label style="display:block"><span style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Password<span style="color:var(--forest)">Forgot?</span></span>${pwField('pw','••••••••','Password input')}</label>`;
+  const phoneFields=`
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Phone number</span>${phoneField('Sign in with phone')}</label>
+    <p style="margin:0;font-size:11.5px;color:var(--muted)">We'll text you a 6-digit code to sign in.</p>`;
+  return `
+<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px">
+  ${backBtn('started')}
+  <div style="margin-top:22px;display:flex;align-items:center;gap:11px">
+    <div style="width:46px;height:46px;border-radius:14px;background:var(--forest);display:grid;place-items:center;color:#F5E6CC;flex:none">${ic('wrench',22,'#F5E6CC',2)}</div>
+    <div><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Sign in</h1><p style="margin:2px 0 0;font-size:12.5px;color:var(--muted)">Welcome back to Garage Go</p></div>
+  </div>
+  <div style="margin-top:22px;display:flex;gap:4px;background:#EBDFC6;border-radius:13px;padding:4px">${tabHtml}</div>
+  <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px">${state.authTab===0?emailFields:phoneFields}</div>
+  <div style="margin-top:18px">${tealBtn('Sign in','home','Sign in button')}</div>
+  ${socialBlock()}
+  <p style="margin:22px 0 0;text-align:center;font-size:13px;color:var(--muted)">New to Garage Go? <button type="button" onclick="nav('signup')" aria-label="Create account link" style="border:0;background:none;font-size:13px;font-weight:700;color:var(--forest);cursor:pointer;padding:0">Create an account</button></p>
+</div>`;
+};
+
+/* SIGN UP */
+screens.signup=()=>`
+<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px">
+  ${backBtn('signin')}
+  <h1 style="margin:22px 0 0;font-family:Outfit,sans-serif;font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Create your account</h1>
+  <p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">Join Garage Go in under a minute.</p>
+  <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px">
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Full name</span>${field('user','text','Dawit Mekonnen','Full name input')}</label>
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Email</span>${field('mail','email','dawit@email.com','Email input')}</label>
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Phone <span style="color:var(--faint);font-weight:400">(optional)</span></span>${phoneField('Phone input')}</label>
+    <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px">Password</span>${pwField('pw2','At least 8 characters','Password input')}</label>
+  </div>
+  <div style="margin-top:18px">${tealBtn('Sign up','home','Sign up button')}</div>
+  ${socialBlock()}
+  <p style="margin:22px 0 0;text-align:center;font-size:13px;color:var(--muted)">Already have an account? <button type="button" onclick="nav('signin')" style="border:0;background:none;font-size:13px;font-weight:700;color:var(--forest);cursor:pointer;padding:0">Sign in</button></p>
+</div>`;
+
+function field(icon,type,ph,aria){
+  return `<span style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:0 13px;height:48px"><span style="width:18px;color:var(--faint);flex:none">${ic(icon,18,'var(--faint)')}</span><input type="${type}" aria-label="${aria}" placeholder="${ph}" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"></span>`;
+}
+function pwField(key,ph,aria){
+  const shown=state[key];
+  return `<span style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:0 13px;height:48px"><span style="width:18px;color:var(--faint);flex:none">${ic('lock',18,'var(--faint)')}</span><input type="${shown?'text':'password'}" aria-label="${aria}" placeholder="${ph}" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"><button type="button" onclick="togglePw('${key}')" aria-label="${shown?'Hide password':'Show password'}" style="border:0;background:none;padding:4px;cursor:pointer;color:var(--faint);flex:none">${ic(shown?'eyeoff':'eye',18,'var(--faint)')}</button></span>`;
+}
+function phoneField(aria){
+  return `<span style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:0 13px;height:48px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--ink2);flex:none;padding-right:9px;border-right:1px solid var(--line)">+251</span><input type="tel" aria-label="${aria}" placeholder="9•• •• •• ••" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"></span>`;
+}
+function socialBlock(){
+  return `
+  <div style="margin:20px 0;display:flex;align-items:center;gap:12px"><span style="flex:1;height:1px;background:var(--line2)"></span><span style="font-size:11px;color:var(--faint)">or continue with</span><span style="flex:1;height:1px;background:var(--line2)"></span></div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button type="button" onclick="nav('home')" aria-label="Continue with Google" class="gg-t" style="width:100%;height:50px;border:1px solid var(--line2);background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer">${GOOGLE}Continue with Google</button>
+    <button type="button" onclick="nav('home')" aria-label="Continue with Apple" class="gg-t" style="width:100%;height:50px;border:0;background:var(--ink);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;font-weight:600;color:#fff;cursor:pointer"><span style="width:19px;color:#fff">${ic('apple',19,'#fff',1.6)}</span>Continue with Apple</button>
+  </div>`;
+}
+function setTab(i){state.authTab=i;render();}
+function togglePw(k){state[k]=!state[k];render();}
+
+/* HOME */
+screens.home=()=>`
+<div class="gg-rise">
+  <div style="padding:56px 20px 4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:5px;color:var(--muted)"><span style="color:var(--terra);flex:none">${ic('pin',13,'var(--terra)',2)}</span><span style="font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bole Medhanialem, Addis Ababa</span>${ic('chevR',11,'var(--muted)')}</div>
+        <h1 style="margin:8px 0 0;font-family:Outfit,sans-serif;font-size:26px;line-height:1.05;font-weight:700;color:var(--ink);letter-spacing:-.6px">Selam, Dawit</h1>
+      </div>
+      <div style="display:flex;gap:8px;flex:none">
+        <button type="button" aria-label="Notifications" style="width:42px;height:42px;border:0;border-radius:14px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2);box-shadow:0 2px 8px rgba(46,43,37,.06)">${ic('bell',19)}</button>
+        <div aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#2D4F1E,#3D6329);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;font-size:15px">D</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:14px 15px;box-shadow:0 2px 12px rgba(46,43,37,.06)"><span style="color:var(--faint);flex:none">${ic('search',19,'var(--faint)')}</span><input type="text" aria-label="Search garages, services or parts" placeholder="Search garage, service or part" style="flex:1;min-width:0;border:0;outline:0;font-size:14px;color:var(--ink);background:transparent"><span style="color:var(--terra);flex:none">${ic('filter',19,'var(--terra)')}</span></div>
+  </div>
+  <div style="padding:22px 16px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+    ${quick.map(q=>`<button type="button" class="gg-t" onclick="nav('${q.go}')" aria-label="${q.label}" style="border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0"><span style="width:58px;height:58px;border-radius:20px;background:${q.chip};color:${q.ink};display:grid;place-items:center;box-shadow:0 4px 12px ${q.shadow}">${ic(q.icon,24,q.ink,2)}</span><span style="font-size:11px;font-weight:600;line-height:1.2;text-align:center;color:var(--ink2)">${q.label}</span></button>`).join('')}
+  </div>
+  <div style="margin:22px 16px 0;background:var(--forest);border-radius:22px;padding:16px 17px;display:flex;align-items:center;gap:13px">
+    <div style="position:relative;width:48px;height:48px;flex:none"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="rgba(245,230,204,.16)" stroke-width="5"></circle><circle cx="24" cy="24" r="20" fill="none" stroke="#E27D60" stroke-width="5" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="38" transform="rotate(-90 24 24)"></circle></svg><span style="position:absolute;inset:0;display:grid;place-items:center;font-family:Outfit,sans-serif;font-size:11.5px;font-weight:700;color:#fff">70%</span></div>
+    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="color:#E27D60;flex:none">${ic('car',14,'#E27D60',2)}</span><strong style="font-size:13.5px;font-weight:600;color:#fff">Toyota Vitz 2014</strong></div><p style="margin:3px 0 0;font-size:11px;color:#C9BE9E;font-family:'IBM Plex Mono',monospace">AA-3-12345 · service in 1,200 km</p></div>
+    <span style="color:#A69C7E;flex:none">${ic('chevR',15,'#A69C7E')}</span>
+  </div>
+  <div style="padding:26px 0 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 16px 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Popular garages</h2><button type="button" onclick="nav('search')" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--forest);cursor:pointer;padding:0">See all</button></div>
+    <div class="hbar" style="display:flex;gap:12px;overflow-x:auto;padding:2px 16px 4px;scroll-snap-type:x mandatory">
+      ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="flex:none;width:204px;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:18px;padding:0;overflow:hidden;cursor:pointer;text-align:left"><div style="height:102px;position:relative">${garageThumb(204,102,i)}<span style="position:absolute;top:9px;left:9px;display:flex;align-items:center;gap:4px;background:rgba(46,43,37,.86);color:#fff;padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:600"><span style="color:#E27D60">${ic('star',11,'#E27D60')}</span>${g.rating}</span></div><div style="padding:11px 12px 13px"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</strong><span style="color:var(--forest);flex:none">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:4px 0 0;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</p><p style="margin:7px 0 0;font-size:11.5px;font-weight:600;color:var(--ink)">From ${g.from} ETB</p></div></button>`).join('')}
+    </div>
+  </div>
+  <div style="margin:24px 16px 0;background:var(--forest);border-radius:22px;padding:16px 17px;display:flex;align-items:center;gap:14px"><span style="flex:none;color:#E27D60">${ic('birr',28,'#E27D60',2)}</span><div><strong style="display:block;font-family:Outfit,sans-serif;font-size:14px;font-weight:600;color:#fff">100 ETB reservation fee</strong><p style="margin:3px 0 0;font-size:11px;color:#C9BE9E">50 ETB to Garage Go · 50 ETB to your garage. Repairs paid on site.</p></div></div>
+  <div style="height:118px"></div>
+</div>`;
+
+/* SEARCH */
+screens.search=()=>{
+  const chipLabels=['All services','Engine','Tyres','Electrical','Body work','AC & cooling'];
+  return `
+<div class="gg-rise">
+  <div style="padding:56px 16px 0">
+    <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Find a garage</h1>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px 14px"><span style="color:var(--terra);flex:none">${ic('pin',18,'var(--terra)',2)}</span><input type="text" aria-label="Search location" value="Bole, Addis Ababa" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;color:var(--ink);background:transparent"><span style="font-size:11.5px;color:var(--forest);font-weight:600">Change</span></div>
+    <div class="hbar" style="margin-top:12px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+      ${chipLabels.map((c,i)=>{const on=state.chip===i;return `<button type="button" onclick="setChip(${i})" style="flex:none;border:1px solid ${on?DARK:'var(--line2)'};background:${on?DARK:'#fff'};color:${on?'#fff':'var(--ink2)'};border-radius:999px;height:34px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${c}</button>`}).join('')}
+    </div>
+  </div>
+  <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:var(--muted)">${garages.length} garages nearby</span><span style="font-size:12.5px;color:var(--forest);font-weight:600;display:flex;align-items:center;gap:5px">${ic('filter',15,'var(--forest)')}Sort: Distance</span></div>
+  <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px">
+    ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left"><span style="width:78px;height:78px;border-radius:14px;overflow:hidden;flex:none">${garageThumb(78,78,i)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:600;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></span><span style="margin-top:3px;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</span><span style="margin-top:2px;font-size:11px;color:${g.openFg};font-weight:600">${g.hours}</span><span style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:8px"><span style="display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--ink)"><span style="color:#E27D60">${ic('star',12,'#E27D60')}</span>${g.rating}<span style="color:var(--faint);font-weight:400">(${g.reviews})</span></span><span style="font-size:11.5px;font-weight:700;color:var(--forest)">From ${g.from} ETB</span></span></span></button>`).join('')}
+  </div>
+  <div style="height:118px"></div>
+</div>`;
+};
+function setChip(i){state.chip=i;render();}
+
+/* GARAGE PROFILE + BOOKING */
+screens.garage=()=>{
+  const g=garages[0];
+  const svcHtml=services.map((s,i)=>{const on=state.service===i;return `<button type="button" onclick="setSvc(${i})" style="width:100%;text-align:left;border:1px solid ${on?FOREST:'var(--line)'};background:${on?'var(--forest-t2)':'#fff'};border-radius:14px;padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer"><span style="width:20px;height:20px;border-radius:999px;border:2px solid ${on?FOREST:'#CBC2AC'};background:${on?FOREST:'#fff'};display:grid;place-items:center;flex:none">${on?ic('check',12,'#fff',3):''}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13px;font-weight:600;color:var(--ink)">${s.n}</strong><span style="font-size:11px;color:var(--muted)">${s.d}</span></span><span style="font-size:12.5px;font-weight:700;color:var(--ink)">${s.p} ETB</span></button>`}).join('');
+  const dayHtml=days.map((x,i)=>{const on=state.day===i;return `<button type="button" onclick="setDay(${i})" style="flex:none;border:1px solid ${on?DARK:'var(--line2)'};background:${on?DARK:'#fff'};border-radius:13px;width:52px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer"><span style="font-size:10.5px;color:${on?'#B7AE90':'var(--faint)'}">${x[0]}</span><strong style="font-size:16px;color:${on?'#fff':'var(--ink)'}">${x[1]}</strong></button>`}).join('');
+  const slotHtml=slots.map((t,i)=>{const off=i===3;const on=state.slot===i&&!off;return `<button type="button" ${off?'disabled':`onclick="setSlot(${i})"`} style="border:1px solid ${on?FOREST:'var(--line2)'};background:${on?'var(--forest-t)':off?'#EFE9DC':'#fff'};color:${on?'var(--forest)':off?'#B9B19C':'var(--ink2)'};border-radius:11px;height:40px;font-size:12.5px;font-weight:600;cursor:${off?'not-allowed':'pointer'}">${t}</button>`}).join('');
+  return `
+<div class="gg-rise" style="min-height:100%;position:relative">
+  <div style="height:210px;position:relative">${garageThumb(390,210,0)}
+    <div style="position:absolute;top:52px;left:16px;right:16px;display:flex;justify-content:space-between">${backBtn('search')}<button type="button" aria-label="Save garage" style="width:40px;height:40px;border:0;border-radius:13px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--terra);box-shadow:0 2px 8px rgba(0,0,0,.08)">${ic('heart',18,'var(--terra)')}</button></div>
+  </div>
+  <div style="margin-top:-26px;position:relative;background:var(--ground);border-radius:26px 26px 0 0;padding:20px 16px 0">
+    <div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">${g.name}</h1><span style="color:var(--forest)">${ic('shield',16,'var(--forest)',2)}</span></div><p style="margin:5px 0 0;font-size:12px;color:var(--muted)">${g.area} · ${g.dist} · ${g.hours}</p></div><div style="text-align:right;flex:none"><div style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--ink)"><span style="color:#E27D60">${ic('star',14,'#E27D60')}</span>${g.rating}</div><span style="font-size:11px;color:var(--faint)">${g.reviews} reviews</span></div></div>
+    <div class="hbar" style="margin-top:12px;display:flex;gap:7px;overflow-x:auto">${g.tags.concat(['AC','Warranty']).map(t=>chipTag(t)).join('')}</div>
+    <div style="margin-top:20px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Choose a service</h2><div style="display:flex;flex-direction:column;gap:9px">${svcHtml}</div></div>
+    <div style="margin-top:20px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Pick a date</h2><div class="hbar" style="display:flex;gap:8px;overflow-x:auto">${dayHtml}</div></div>
+    <div style="margin-top:16px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Time slot</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${slotHtml}</div></div>
+    <div style="margin-top:16px"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Vehicle & problem</h2><div style="display:flex;flex-direction:column;gap:10px">${field('car','text','Toyota Vitz 2014 · AA-3-12345','Vehicle')}<textarea aria-label="Describe the problem" placeholder="Describe the problem (optional)" rows="2" style="border:1px solid var(--line);border-radius:13px;padding:11px 13px;font-size:13px;color:var(--ink);background:#fff;outline:0;resize:none"></textarea></div></div>
+    <div style="height:150px"></div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(245,230,204,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:13px 16px 20px;display:flex;align-items:center;gap:12px"><div style="flex:1"><span style="font-size:11px;color:var(--muted)">Reservation fee</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:18px;font-weight:800;color:var(--ink)">100 ETB</strong></div><button type="button" class="gg-t" onclick="nav('pay')" aria-label="Pay 100 ETB reservation fee" style="flex:none;border:0;border-radius:14px;background:var(--forest);color:#fff;height:52px;padding:0 26px;font-family:Outfit,sans-serif;font-size:14.5px;font-weight:700;cursor:pointer">Pay 100 ETB</button></div>
+</div>`;
+};
+function setSvc(i){state.service=i;render();}
+function setDay(i){state.day=i;render();}
+function setSlot(i){state.slot=i;render();}
+
+/* Telebirr pay sheet (mock) */
+screens.pay=()=>screens.garage();
+function openPaySheet(){
+  const sheet=document.createElement('div');
+  sheet.id='paySheet';
+  sheet.style.cssText='position:absolute;inset:0;z-index:80;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(30,26,20,.5)';
+  sheet.innerHTML=`
+    <div onclick="closePay(event)" style="position:absolute;inset:0"></div>
+    <div class="gg-rise" style="position:relative;background:var(--ground);border-radius:26px 26px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.25)">
+      <div style="width:40px;height:5px;border-radius:99px;background:#D6CBB2;margin:0 auto 14px"></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:42px;height:42px;border-radius:12px;background:#E27D60;display:grid;place-items:center;color:#fff;font-family:Outfit,sans-serif;font-weight:800;font-size:13px">T</div><div><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Pay with Telebirr</h2><p style="margin:2px 0 0;font-size:12px;color:var(--muted)">100 ETB reservation fee</p></div></div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+        ${telebirr.map((t,i)=>`<button type="button" onclick="payNow(${i})" aria-label="Pay with Telebirr ${t.n}" class="gg-t" style="border:1px solid var(--line);background:#fff;border-radius:15px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left"><span style="width:40px;height:40px;border-radius:11px;background:var(--terra-t);color:var(--terra-d);display:grid;place-items:center;flex:none">${ic('phone',18,'var(--terra-d)',2)}</span><span style="flex:1;min-width:0"><strong style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink)">${t.n}</strong><span style="font-size:11.5px;color:var(--muted)">${t.owner} · ${t.label}</span></span><span style="color:var(--forest)">${ic('chevR',16,'var(--forest)')}</span></button>`).join('')}
+      </div>
+      <p style="margin:14px 0 0;text-align:center;font-size:11px;color:var(--faint)">Mock payment — no real transaction is made.</p>
+    </div>`;
+  document.querySelector('.stage').appendChild(sheet);
+}
+function closePay(e){if(e&&e.currentTarget!==e.target)return;const s=el('paySheet');if(s)s.remove();}
+function payNow(i){
+  const s=el('paySheet');
+  if(s)s.innerHTML=`<div style="position:absolute;inset:0;display:grid;place-items:center;background:rgba(30,26,20,.5)"><div style="width:64px;height:64px;border-radius:50%;border:4px solid rgba(245,230,204,.3);border-top-color:#E27D60;animation:spin 1s linear infinite"></div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  state.payChoice=telebirr[i];
+  setTimeout(()=>{if(s)s.remove();toast('Reservation confirmed!');nav('confirm');},1050);
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.setAttribute('role','status');t.textContent=msg;
+  t.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:90;background:#2D4F1E;color:#F5E6CC;font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(45,79,30,.4);animation:ggRise .3s both';
+  document.querySelector('.stage').appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},2200);
+}
+
+/* CONFIRMATION */
+screens.confirm=()=>{
+  const bid='GG-'+Math.floor(100000+Math.random()*899999);
+  return `
+<div class="gg-rise" style="min-height:100%;background:var(--ground);padding:60px 22px 30px;display:flex;flex-direction:column">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:14px"><div style="width:82px;height:82px;border-radius:50%;background:var(--forest-t);display:grid;place-items:center;animation:ggPop .45s both"><span style="width:52px;height:52px;border-radius:50%;background:var(--forest);display:grid;place-items:center;color:#fff">${ic('check',30,'#fff',3)}</span></div><h1 style="margin:20px 0 0;font-family:Outfit,sans-serif;font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.4px">Reservation confirmed</h1><p style="margin:8px 0 0;font-size:13px;color:var(--muted);max-width:260px">Your slot is held. Show this booking ID at the garage.</p></div>
+  <div style="margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 4px 16px rgba(46,43,37,.05)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px dashed var(--line2)"><div><span style="font-size:11px;color:var(--muted)">Booking ID</span><strong style="display:block;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--ink);letter-spacing:.5px">${bid}</strong></div><span style="font-size:11px;font-weight:600;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:5px 11px">Confirmed</span></div>
+    ${[['Garage','Bole Auto Care'],['Service',services[state.service].n],['Date & time','Wed 17 Sep · '+slots[state.slot]],['Vehicle','Toyota Vitz 2014 · AA-3-12345'],['Paid via','Telebirr '+(state.payChoice?state.payChoice.n:'0987505315')]].map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;${i?'border-top:1px solid #EFE7D5':''}"><span style="font-size:12.5px;color:var(--muted)">${k}</span><span style="font-size:12.5px;font-weight:600;color:var(--ink);text-align:right">${v}</span></div>`).join('')}
+  </div>
+  <div style="margin-top:14px;background:var(--forest);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="color:#E27D60;flex:none">${ic('birr',22,'#E27D60',2)}</span><div style="flex:1"><strong style="display:block;font-size:12.5px;color:#fff">100 ETB fee split</strong><p style="margin:2px 0 0;font-size:11px;color:#C9BE9E">50 ETB → Garage Go · 50 ETB → Bole Auto Care</p></div></div>
+  <div style="margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:10px">${tealBtn('Back to home','home','Back to home')}<button type="button" onclick="nav('search')" style="width:100%;height:48px;border:1px solid var(--line2);background:#fff;border-radius:15px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer">Book another garage</button></div>
+</div>`;
+};
+
+/* EMERGENCY */
+screens.emergency=()=>`
+<div class="gg-rise">
+  <div style="padding:56px 16px 0">
+    <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Emergency mechanic</h1>
+    <div style="margin-top:16px;background:linear-gradient(140deg,#E27D60,#CE6A4E);border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.92">${ic('bolt',15,'#fff',2.4)} STRANDED?</div>
+      <h2 style="margin:8px 0 0;font-family:Outfit,sans-serif;font-size:20px;font-weight:800;line-height:1.15">I need a mechanic<br>now</h2>
+      <p style="margin:8px 0 0;font-size:12.5px;opacity:.94;max-width:240px">Share your location and we'll dispatch the nearest verified mechanic.</p>
+      <button type="button" class="gg-t" onclick="toast('Locating nearby mechanics…')" aria-label="Get Emergency Help" style="margin-top:14px;border:0;border-radius:13px;background:#fff;color:#B14B2E;height:46px;padding:0 20px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px">${ic('pin',17,'#B14B2E',2)}Locate me & dispatch</button>
+    </div>
+  </div>
+  <div style="padding:22px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:var(--ink)">Verified mechanics nearby</h2>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      ${mechanics.map(m=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px"><div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#2E2B25,#4A4A4A);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;flex:none">${m.name[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;color:var(--ink)">${m.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:2px 0 0;font-size:11.5px;color:var(--muted)">${m.area} · ${m.exp} exp</p></div><div style="text-align:right;flex:none"><span style="font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${m.eta}</span><p style="margin:4px 0 0;font-size:10.5px;color:var(--faint)">${m.dist}</p></div></div><div class="hbar" style="margin-top:10px;display:flex;gap:6px;overflow-x:auto">${m.tags.map(t=>chipTag(t)).join('')}</div><div style="margin-top:11px;display:flex;gap:8px"><button type="button" onclick="toast('Requesting ${m.name}…')" style="flex:1;border:0;border-radius:12px;background:var(--forest);color:#fff;height:42px;font-size:12.5px;font-weight:700;cursor:pointer">Request now</button><button type="button" aria-label="Call ${m.name}" style="width:44px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2)">${ic('phone',18)}</button></div></div>`).join('')}
+    </div>
+  </div>
+  <div style="height:118px"></div>
+</div>`;
+
+/* ROADSIDE */
+screens.roadside=()=>`
+<div class="gg-rise">
+  <div style="padding:56px 16px 0"><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Roadside assistance</h1>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px 14px"><span style="color:var(--terra);flex:none">${ic('pin',18,'var(--terra)',2)}</span><div style="flex:1;min-width:0"><strong style="font-size:12.5px;color:var(--ink)">Ring Road, near Lebu</strong><p style="margin:1px 0 0;font-size:11px;color:var(--muted)">Location shared · accurate to 12 m</p></div><span style="font-size:11.5px;color:var(--forest);font-weight:600">Update</span></div>
+  </div>
+  <div style="padding:20px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:var(--ink)">What do you need?</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${roadsideOpts.map((r,i)=>`<button type="button" onclick="setRoad(${i})" style="border:1px solid ${state.road===i?FOREST:'var(--line2)'};background:${r.bg};color:${r.ink};border-radius:18px;padding:15px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px;box-shadow:${state.road===i?'0 0 0 2px rgba(45,79,30,.3)':'none'}"><span style="width:42px;height:42px;border-radius:12px;background:${r.chip};color:${r.cIn};display:grid;place-items:center">${ic(r.icon,20,r.cIn,2)}</span><span><strong style="display:block;font-family:Outfit,sans-serif;font-size:14px;font-weight:600">${r.t}</strong><span style="font-size:11px;opacity:.7">${r.d}</span></span></button>`).join('')}
+    </div>
+  </div>
+  <div style="padding:18px 16px 0"><h2 style="margin:0 0 10px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Vehicle</h2>${field('car','text','Toyota Vitz 2014 · AA-3-12345','Vehicle')}</div>
+  <div style="padding:20px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;color:var(--ink)">Available providers</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${providers.map(p=>`<div style="border:1px solid var(--line);background:#fff;border-radius:16px;padding:13px;display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:12px;background:var(--terra-t);color:var(--terra-d);display:grid;place-items:center;flex:none">${ic('truck',20,'var(--terra-d)',2)}</div><div style="flex:1;min-width:0"><strong style="font-size:13.5px;color:var(--ink)">${p.name}</strong><p style="margin:2px 0 0;font-size:11px;color:var(--muted)">${p.type} · ${p.price} ETB</p></div><div style="text-align:right;flex:none"><span style="display:flex;align-items:center;gap:4px;justify-content:flex-end;font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${ic('clock',11,'var(--forest)',2.2)}${p.eta}</span></div></div>`).join('')}
+    </div>
+  </div>
+  <div style="padding:18px 16px 0">${tealBtn('Request assistance','home','Request Towing')}</div>
+  <div style="height:118px"></div>
+</div>`;
+function setRoad(i){state.road=i;render();}
+
+/* MARKETPLACE */
+screens.market=()=>`
+<div class="gg-rise" style="position:relative;min-height:100%">
+  <div style="padding:56px 16px 0"><h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Marketplace</h1>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px 14px"><span style="color:var(--faint);flex:none">${ic('search',18,'var(--faint)')}</span><input type="text" aria-label="Search parts" placeholder="Search parts, tyres, oils, tools" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"></div>
+    <div class="hbar" style="margin-top:12px;display:flex;gap:8px;overflow-x:auto">${['All','Car parts','Tyres','Oils','Accessories','Tools'].map((c,i)=>`<button type="button" style="flex:none;border:1px solid ${i===0?DARK:'var(--line2)'};background:${i===0?DARK:'#fff'};color:${i===0?'#fff':'var(--ink2)'};border-radius:999px;height:34px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${c}</button>`).join('')}</div>
+  </div>
+  <div style="padding:16px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    ${products.map((p,i)=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;overflow:hidden"><div style="height:96px;position:relative">${garageThumb(200,96,i+1)}${p.tag?`<span style="position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;color:#fff;background:var(--terra);border-radius:999px;padding:3px 8px">${p.tag}</span>`:''}</div><div style="padding:11px 12px 13px"><strong style="display:block;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.25">${p.n}</strong><p style="margin:4px 0 0;font-size:10.5px;color:var(--muted)">${p.c}</p><p style="margin:7px 0 0;font-family:Outfit,sans-serif;font-size:14px;font-weight:800;color:var(--forest)">${p.p} ETB</p></div></div>`).join('')}
+  </div>
+  <div style="height:118px"></div>
+  <button type="button" onclick="toast('Opening chat with seller…')" aria-label="Contact seller" style="position:absolute;right:18px;bottom:130px;z-index:30;border:0;border-radius:16px;background:var(--forest);color:#F5E6CC;height:52px;padding:0 20px;display:flex;align-items:center;gap:9px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 26px rgba(45,79,30,.35)">${ic('chat',19,'#F5E6CC',2)}Contact seller</button>
+</div>`;
+
+/* PROFILE */
+screens.profile=()=>`
+<div class="gg-rise">
+  <div style="padding:56px 16px 0;text-align:center"><div style="width:76px;height:76px;border-radius:24px;margin:0 auto;background:linear-gradient(135deg,#2D4F1E,#3D6329);display:grid;place-items:center;color:#F5E6CC;font-family:Outfit,sans-serif;font-weight:700;font-size:28px">D</div><h1 style="margin:12px 0 0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">Dawit Mekonnen</h1><p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">+251 91 •• •• 42 · Bole, Addis Ababa</p></div>
+  <div style="margin:18px 16px 0;background:var(--forest);border-radius:22px;padding:18px;color:#fff;position:relative;overflow:hidden"><div style="position:absolute;right:-24px;bottom:-24px;width:120px;height:120px;border-radius:50%;background:rgba(226,125,96,.16)"></div><div style="display:flex;justify-content:space-between;align-items:start;position:relative"><div><span style="font-size:11.5px;color:#C9BE9E">Garage Go points</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#E27D60;line-height:1">640</strong></div><button type="button" onclick="toast('Rewards coming soon')" style="border:1px solid rgba(245,230,204,.24);background:rgba(245,230,204,.08);color:#F5E6CC;border-radius:11px;height:36px;padding:0 13px;font-size:11.5px;font-weight:600;cursor:pointer">View rewards</button></div><div style="margin-top:14px;display:flex;gap:18px;position:relative">${[['24','Bookings'],['6','Saved'],['4.9','Rating']].map(([v,k])=>`<div><strong style="font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:#fff">${v}</strong><p style="margin:1px 0 0;font-size:10.5px;color:#C9BE9E">${k}</p></div>`).join('')}</div></div>
+  <div style="margin:18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden">${profileMenu.map((m,i)=>`<button type="button" style="width:100%;border:0;background:none;padding:14px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;${i?'border-top:1px solid #EFE7D5':''}"><span style="width:38px;height:38px;border-radius:11px;background:var(--ground);color:var(--ink2);display:grid;place-items:center;flex:none">${ic(m.icon,18,'var(--ink2)')}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13.5px;font-weight:600;color:var(--ink)">${m.t}</strong><span style="font-size:11.5px;color:var(--muted)">${m.d}</span></span><span style="color:#CBC2AC">${ic('chevR',16,'#CBC2AC')}</span></button>`).join('')}</div>
+  <div style="padding:16px"><button type="button" onclick="nav('welcome')" style="width:100%;height:48px;border:1px solid var(--line2);background:#fff;border-radius:15px;font-size:13.5px;font-weight:600;color:var(--terra-d);cursor:pointer">Sign out</button></div>
+  <div style="height:40px"></div>
+</div>`;
+
+/* ─────────── ROUTER ─────────── */
+const tabs=[
+  {key:'home',label:'Home',icon:'home'},
+  {key:'search',label:'Garages',icon:'car'},
+  {key:'market',label:'Market',icon:'bag'},
+  {key:'profile',label:'Profile',icon:'user'},
+];
+const tabScreens=['home','search','market','profile','emergency','roadside'];
+let current='welcome';
+function nav(key){
+  if(key==='pay'){openPaySheet();return;}
+  current=key;render();scr.scrollTop=0;
+}
+function render(){
+  scr.innerHTML=(screens[current]||screens.home)();
+  const tb=el('tabbar');
+  if(tabScreens.includes(current)){
+    tb.hidden=false;
+    tb.innerHTML=tabs.map(t=>{
+      const on=t.key===current||(t.key==='search'&&current==='garage');
+      return `<button type="button" class="tab ${on?'on':''}" onclick="nav('${t.key}')" aria-label="${t.label}" aria-current="${on?'page':'false'}">${ic(t.icon,22,on?'var(--forest)':'var(--muted)',2)}<span class="lab">${t.label}</span><span class="dot"></span></button>`;
+    }).join('');
+  }else{tb.hidden=true;tb.innerHTML='';}
+}
+render();
+</script>
