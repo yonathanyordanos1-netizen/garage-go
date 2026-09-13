@@ -64,8 +64,6 @@ export default function Settings() {
         {/* Account */}
         <SectionLabel>Account</SectionLabel>
         <Card>
-          <ValueRow icon="lock" label="Change password" onPress={() => toast.info('Coming soon')} />
-          <Separator />
           <Pressable
             onPress={() => Alert.alert('Delete account', 'This permanently deletes your account and data. This cannot be undone.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => toast.error('Account deletion is disabled in the demo') }])}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 15, height: 54 }}

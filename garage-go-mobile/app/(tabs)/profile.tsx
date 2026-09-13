@@ -7,14 +7,13 @@ import { useAuth } from '../../lib/auth';
 import { useToast } from '../../components/toast';
 import { Card, Avatar, Badge, Button, Separator, radius, shadows } from '../../components/ui';
 import { Icon, IconName } from '../../lib/icons';
-import { signOut } from '../../lib/supabase';
 
 type Row = { icon: IconName; label: string; sub?: string; onPress: () => void; danger?: boolean };
 
 export default function Profile() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { profile, session } = useAuth();
+  const { profile, session, signOut } = useAuth();
   const toast = useToast();
   const insets = useSafeAreaInsets();
 

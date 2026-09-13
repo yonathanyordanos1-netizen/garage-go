@@ -73,7 +73,7 @@ function FloatingTabBar({ state, navigation }: TabBarProps) {
 }
 
 export default function TabsLayout() {
-  const { session, loading } = useAuth();
+  const { authed, loading } = useAuth();
   const { colors } = useTheme();
 
   if (loading) {
@@ -83,7 +83,7 @@ export default function TabsLayout() {
       </View>
     );
   }
-  if (!session) return <Redirect href="/welcome" />;
+  if (!authed) return <Redirect href="/welcome" />;
 
   return (
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <FloatingTabBar {...props} />}>

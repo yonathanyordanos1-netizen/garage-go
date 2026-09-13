@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme-context';
 
 export default function Index() {
-  const { session, loading } = useAuth();
+  const { authed, loading } = useAuth();
   const { colors, ready } = useTheme();
 
   if (loading || !ready) {
@@ -16,6 +16,6 @@ export default function Index() {
     );
   }
 
-  // Signed in → main tabs; otherwise → onboarding (3-step guide).
-  return <Redirect href={session ? '/(tabs)' : '/welcome'} />;
+  // Signed in (real or demo) → main tabs; otherwise → onboarding (3-step guide).
+  return <Redirect href={authed ? '/(tabs)' : '/welcome'} />;
 }

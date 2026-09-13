@@ -27,7 +27,9 @@ const ThemeContext = createContext<ThemeState>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // `useColorScheme` reflects the phone's system Light/Dark setting live.
   const system = useColorScheme();
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  // Default is Light — the app stays light even when the device is in dark mode.
+  // Users can still opt into Dark or System from Settings → Appearance.
+  const [preference, setPreferenceState] = useState<ThemePreference>('light');
   const [ready, setReady] = useState(false);
 
   // Restore the saved preference once on launch.

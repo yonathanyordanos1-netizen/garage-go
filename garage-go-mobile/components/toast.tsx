@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutUp, LinearTransition, Easing } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/theme-context';
 import { radius, shadows } from '../lib/theme';
@@ -61,35 +61,43 @@ function ToastHost({ items, onClose }: { items: ToastItem[]; onClose: (id: numbe
   );
 }
 
+const EASE = Easing.out(Easing.cubic);
+
 function ToastRow({ item, onClose }: { item: ToastItem; onClose: () => void }) {
   const { colors } = useTheme();
-  const meta: Record<Variant, { icon?: IconName; color?: string }> = {
+  const meta: Record<Variant, { icon?: IconName; color?: string; tint?: string }> = {
     default: {},
-    success: { icon: 'checkCircle', color: colors.success },
-    error: { icon: 'alertCircle', color: colors.error },
-    info: { icon: 'info', color: colors.info },
-    warning: { icon: 'alertCircle', color: colors.warning },
+    success: { icon: 'checkCircle', color: colors.success, tint: colors.successTint },
+    error: { icon: 'alertCircle', color: colors.error, tint: colors.errorTint },
+    info: { icon: 'info', color: colors.info, tint: colors.infoTint },
+    warning: { icon: 'alertCircle', color: colors.warning, tint: colors.warningTint },
   };
   const m = meta[item.variant];
   return (
     <Animated.View
-      entering={SlideInUp.springify().damping(18).stiffness(350)}
-      exiting={SlideOutUp.duration(200)}
+      // Smooth, timing-based drop-in — no spring overshoot / bounce.
+      entering={FadeInDown.duration(220).easing(EASE)}
+      exiting={FadeOutUp.duration(160).easing(EASE)}
+      layout={LinearTransition.duration(200).easing(EASE)}
       style={{
-        minHeight: 48, borderRadius: radius.md, backgroundColor: colors.card,
-        borderWidth: 1, borderColor: colors.line, ...shadows.md,
-        borderLeftWidth: m.color ? 3 : 1, borderLeftColor: m.color ?? colors.line,
-        flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12,
+        borderRadius: radius.md, backgroundColor: colors.card,
+        borderWidth: 1, borderColor: m.color ?? colors.line, ...shadows.md,
+        borderLeftWidth: m.color ? 4 : 1, borderLeftColor: m.color ?? colors.line,
+        flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 12, paddingVertical: 11,
       }}
     >
-      {m.icon && <Icon name={m.icon} size={20} color={m.color} strokeWidth={2} />}
-      <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: colors.ink }}>{item.message}</Text>
+      {m.icon && (
+        <View style={{ width: 30, height: 30, borderRadius: 9, backgroundColor: m.tint, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name={m.icon} size={18} color={m.color} strokeWidth={2.2} />
+        </View>
+      )}
+      <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: colors.ink, lineHeight: 18 }}>{item.message}</Text>
       {item.action ? (
-        <Pressable onPress={() => { item.action!.onPress(); onClose(); }} style={{ height: 28, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.ink }}>{item.action.label}</Text>
+        <Pressable onPress={() => { item.action!.onPress(); onClose(); }} style={{ height: 30, paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 11.5, fontWeight: '600', color: colors.ink }}>{item.action.label}</Text>
         </Pressable>
       ) : (
-        <Pressable onPress={onClose} hitSlop={8}><Icon name="x" size={15} color={colors.faint} /></Pressable>
+        <Pressable onPress={onClose} hitSlop={8} style={{ padding: 2 }}><Icon name="x" size={16} color={colors.faint} /></Pressable>
       )}
     </Animated.View>
   );
