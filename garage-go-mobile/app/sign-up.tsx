@@ -1,85 +1,101 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
-import { Icon } from '../lib/icons';
-import { Field, PasswordField, PhoneField, PrimaryButton } from '../components/ui';
-import { SocialAuth } from '../components/social';
+import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
+import { Button, Field, Separator, IconButton } from '../components/ui';
+import { Icon } from '../lib/icons';
 import { signUp } from '../lib/supabase';
+import * as haptics from '../lib/haptics';
+
+function strength(pw: string) {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return Math.min(s, 4);
+}
 
 export default function SignUp() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  async function handleSignUp() {
-    if (!name || !email || !password) return toast('Fill in name, email and password');
-    if (password.length < 8) return toast('Password must be at least 8 characters');
-    setLoading(true);
-    const fullPhone = phone ? '+251' + phone.replace(/\D/g, '').replace(/^0/, '') : '';
-    const { data, error } = await signUp(email.trim(), password, {
-      full_name: name.trim(),
-      phone: fullPhone,
-      role: 'customer',
-    });
-    setLoading(false);
-    if (error) return toast(error.message);
-    // If email confirmation is ON, there is no session yet.
-    if (!data.session) {
-      toast('Check your email to confirm your account');
+  const score = strength(password);
+  const labels = ['Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  const scoreColors = [colors.error, colors.error, colors.warning, colors.warning, colors.success];
+
+  async function submit() {
+    if (!name.trim()) return toast.error('Enter your full name');
+    if (!email.trim()) return toast.error('Enter your email');
+    if (password.length < 8) return toast.error('Password must be at least 8 characters');
+    if (password !== confirm) return toast.error('Passwords do not match');
+    setBusy(true);
+    const { data, error } = await signUp(email.trim(), password, { full_name: name.trim(), role: 'customer' });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    haptics.success();
+    if (data.session) {
+      router.replace('/(tabs)');
+    } else {
+      toast.success('Check your email to confirm your account');
       router.replace('/sign-in');
-      return;
     }
-    router.replace('/(tabs)');
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 22, paddingBottom: insets.bottom + 30 }}
-      keyboardShouldPersistTaps="handled">
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={styles.back}>
-        <Icon name="chevL" size={18} color={colors.ink2} />
-      </Pressable>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.ground }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: 24 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <IconButton icon="chevL" onPress={() => router.back()} label="Back" />
 
-      <Text style={styles.h1}>Create your account</Text>
-      <Text style={styles.subtle}>Join Garage Go in under a minute.</Text>
+      <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center', marginTop: 22 }}>
+        <Icon name="wrench" size={26} color={colors.onPrimary} strokeWidth={2} />
+      </View>
+      <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 16 }}>Create account</Text>
+      <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>Join Garage Go — book garages instantly</Text>
 
-      <View style={{ marginTop: 20, gap: 12 }}>
-        <Field label="Full name" icon="user" accessibilityLabel="Full name input" placeholder="Dawit Mekonnen" value={name} onChangeText={setName} />
-        <Field label="Email" icon="mail" accessibilityLabel="Email input" placeholder="dawit@email.com" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-        <View style={{ gap: 6 }}>
-          <Text style={styles.fieldLabel}>Phone <Text style={{ color: colors.faint, fontWeight: '400' }}>(optional)</Text></Text>
-          <PhoneField value={phone} onChangeText={setPhone} accessibilityLabel="Phone input" />
+      <View style={{ marginTop: 22, gap: 14 }}>
+        <Field label="Full name" icon="user" placeholder="Dawit Mekonnen" value={name} onChangeText={setName} />
+        <Field label="Email" icon="mail" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <View>
+          <Field label="Password" icon="lock" placeholder="At least 8 characters" value={password} onChangeText={setPassword} secure />
+          {password.length > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <View style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <View key={i} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: i < score ? scoreColors[score] : colors.line }} />
+                ))}
+              </View>
+              <Text style={{ fontSize: 10.5, fontWeight: '600', color: scoreColors[score], width: 44, textAlign: 'right' }}>{labels[score]}</Text>
+            </View>
+          )}
         </View>
-        <PasswordField label="Password" accessibilityLabel="Password input" placeholder="At least 8 characters" value={password} onChangeText={setPassword} />
+        <Field label="Confirm password" icon="lock" placeholder="Re-enter password" value={confirm} onChangeText={setConfirm} secure error={confirm.length > 0 && confirm !== password ? 'Passwords do not match' : undefined} />
+        <Button label="Create account" iconRight="arrowR" onPress={submit} loading={busy} />
       </View>
 
-      <View style={{ marginTop: 18 }}>
-        <PrimaryButton label="Sign up" onPress={handleSignUp} loading={loading} />
+      <Separator label="or continue with" style={{ marginTop: 24 }} />
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+        <View style={{ flex: 1 }}><Button label="Google" variant="outline" onPress={() => toast.info('Google sign-in coming soon')} /></View>
+        <View style={{ flex: 1 }}><Button label="Apple" icon="apple" variant="outline" onPress={() => toast.info('Apple sign-in coming soon')} /></View>
       </View>
 
-      <SocialAuth onGoogle={() => toast('Enable Google in Supabase Auth to use this')} onApple={() => toast('Enable Apple in Supabase Auth to use this')} />
-
-      <Text style={styles.footer}>
+      <Text style={{ textAlign: 'center', fontSize: 13, color: colors.muted, marginTop: 24 }}>
         Already have an account?{' '}
-        <Text style={styles.link} onPress={() => router.replace('/sign-in')}>Sign in</Text>
+        <Text onPress={() => router.replace('/sign-in')} style={{ fontWeight: '700', color: colors.ink }}>Sign in</Text>
       </Text>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  back: { width: 40, height: 40, borderRadius: 13, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  h1: { marginTop: 22, fontSize: 23, fontWeight: '800', color: colors.ink, letterSpacing: -0.4 },
-  subtle: { marginTop: 3, fontSize: 12.5, color: colors.muted },
-  fieldLabel: { fontSize: 11.5, fontWeight: '600', color: colors.ink2 },
-  footer: { marginTop: 22, textAlign: 'center', fontSize: 13, color: colors.muted },
-  link: { fontWeight: '700', color: colors.ink },
-});

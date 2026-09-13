@@ -59,7 +59,7 @@
   .gg-float{animation:ggFloat 4.6s ease-in-out infinite}
   .gg-in{animation:ggRiseIn .55s cubic-bezier(.22,.68,0,1) both}
   /* Smooth hover/press interactions (as in the first Claude design) */
-  .gg-t{transition:transform .2s cubic-bezier(.22,.68,0,1),box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+  .gg-t{position:relative;overflow:hidden;transition:transform .2s cubic-bezier(.22,.68,0,1),box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
   .gg-t:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(92,58,33,.12)}
   .gg-t:active{transform:translateY(0) scale(.98)}
   .gg-press{transition:transform .2s cubic-bezier(.22,.68,0,1),background .2s ease,color .2s ease,border-color .2s ease}
@@ -68,7 +68,37 @@
   button{font-family:inherit}
   input,textarea{font-family:inherit}
   :focus-visible{outline:2.5px solid var(--forest);outline-offset:2px;border-radius:8px}
-  @media (prefers-reduced-motion:reduce){.gg-rise,.gg-in,.gg-float{animation:none}.gg-t,.gg-press{transition:none}}
+
+  /* Tap ripple (delegated to any .gg-t) */
+  .rip{position:absolute;border-radius:50%;background:currentColor;opacity:.15;transform:scale(0);animation:ggRip .55s ease-out forwards;pointer-events:none;z-index:0}
+  @keyframes ggRip{to{transform:scale(1);opacity:0}}
+
+  /* Page (screen) transitions — the scroll container slides on X */
+  @keyframes pgFwd{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+  @keyframes pgBack{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+  @keyframes pgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .scr.pg-fwd{animation:pgFwd .34s cubic-bezier(.22,.68,0,1)}
+  .scr.pg-back{animation:pgBack .34s cubic-bezier(.22,.68,0,1)}
+  .scr.pg-fade{animation:pgFade .3s ease}
+  /* silent repaint for same-screen state updates — no entrance replay */
+  .scr.no-anim *{animation-duration:0s!important;animation-delay:0s!important}
+  .scr.no-anim .reveal{opacity:1;transform:none;transition:none}
+
+  /* Scroll-reveal — content rises on Y as it enters view */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s cubic-bezier(.22,.68,0,1),transform .55s cubic-bezier(.22,.68,0,1);transition-delay:calc(var(--i,0)*55ms)}
+  .reveal.in{opacity:1;transform:none}
+
+  @keyframes ggPulse{0%{transform:scale(1);opacity:1}70%{transform:scale(2.4);opacity:0}100%{opacity:0}}
+  .pulse{position:relative}
+  .pulse::after{content:"";position:absolute;inset:0;border-radius:inherit;background:inherit;animation:ggPulse 1.9s ease-out infinite}
+  @keyframes ggTabPop{0%{transform:translateY(0)}40%{transform:translateY(-4px) scale(1.14)}100%{transform:translateY(0)}}
+  @keyframes ggDotIn{from{transform:scale(0)}to{transform:scale(1)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .gg-rise,.gg-in,.gg-float,.scr,.rip,.pulse::after{animation:none!important}
+    .gg-t,.gg-press,.reveal{transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
 
   .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:40;
     padding:10px 10px calc(12px + env(safe-area-inset-bottom));
@@ -78,11 +108,13 @@
   .tab{flex:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0 3px;color:var(--muted);transition:color .2s ease}
   .tab .ico{display:grid;place-items:center;transition:transform .2s ease}
   .tab:hover .ico{transform:translateY(-2px)}
-  .tab .lab{font-size:10.5px;font-weight:600}
+  .tab:active{transform:scale(.92)}
+  .tab .lab{font-size:10.5px;font-weight:600;transition:font-weight .2s ease}
   .tab .dot{width:5px;height:5px;border-radius:99px;background:var(--forest);opacity:0;transition:opacity .2s ease}
   .tab.on{color:var(--forest)}
   .tab.on .lab{font-weight:700}
-  .tab.on .dot{opacity:1}
+  .tab.on .dot{opacity:1;animation:ggDotIn .32s cubic-bezier(.34,1.56,.64,1) both}
+  .tab.on .ico{animation:ggTabPop .42s cubic-bezier(.34,1.56,.64,1)}
   .homeind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:99px;background:rgba(0,0,0,.2);z-index:70;pointer-events:none}
 </style>
 
@@ -373,7 +405,7 @@ screens.signup=()=>`
   </div>
   <p style="margin-top:auto;padding-top:24px;text-align:center;font-size:13.5px;color:var(--muted)">Already have an account? <button type="button" onclick="nav('signin')" class="gg-press" style="border:0;background:none;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px">Sign in</button></p>
 </div>`;
-function sendOtp(which){ if(which==='up')state.otpSentUp=true; else state.otpSent=true; toast('Code sent to your phone'); render(); }
+function sendOtp(which){ if(which==='up')state.otpSentUp=true; else state.otpSent=true; toast('Code sent to your phone'); render('update'); }
 
 function field(icon,type,ph,aria){
   return `<span style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:0 13px;height:48px"><span style="width:18px;color:var(--faint);flex:none">${ic(icon,18,'var(--faint)')}</span><input type="${type}" aria-label="${aria}" placeholder="${ph}" style="flex:1;min-width:0;border:0;outline:0;font-size:13.5px;background:transparent;color:var(--ink)"></span>`;
@@ -393,8 +425,8 @@ function socialBlock(){
     <button type="button" onclick="nav('home')" aria-label="Continue with Apple" class="gg-t" style="width:100%;height:50px;border:0;background:var(--ink);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;font-weight:600;color:#fff;cursor:pointer"><span style="width:19px;color:#fff">${ic('apple',19,'#fff',1.6)}</span>Continue with Apple</button>
   </div>`;
 }
-function setTab(i){state.authTab=i;render();}
-function togglePw(k){state[k]=!state[k];render();}
+function setTab(i){state.authTab=i;render('update');}
+function togglePw(k){state[k]=!state[k];render('update');}
 
 /* HOME — Beu-style delivery layout */
 const cats=[
@@ -413,7 +445,7 @@ screens.home=()=>`
         <h1 style="margin:6px 0 0;font-family:Outfit,sans-serif;font-size:24px;line-height:1.05;font-weight:700;color:var(--ink);letter-spacing:-.5px">Selam, Dawit</h1>
       </div>
       <div style="display:flex;gap:8px;flex:none">
-        <button type="button" aria-label="Notifications" style="position:relative;width:44px;height:44px;border:0;border-radius:15px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2);box-shadow:0 2px 10px rgba(58,42,29,.07)">${ic('bell',19)}<span style="position:absolute;top:11px;right:12px;width:7px;height:7px;border-radius:99px;background:var(--terra);border:1.5px solid #fff"></span></button>
+        <button type="button" aria-label="Notifications" style="position:relative;width:44px;height:44px;border:0;border-radius:15px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2);box-shadow:0 2px 10px rgba(58,42,29,.07)">${ic('bell',19)}<span class="pulse" style="position:absolute;top:11px;right:12px;width:7px;height:7px;border-radius:99px;background:var(--terra);border:1.5px solid #fff"></span></button>
         <div aria-hidden="true" style="width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;font-size:16px">D</div>
       </div>
     </div>
@@ -449,7 +481,7 @@ screens.home=()=>`
   <div class="gg-rise" style="animation-delay:.15s;padding:24px 0 0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Popular garages</h2><button type="button" onclick="nav('search')" aria-label="See all garages" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:0">See all</button></div>
     <div class="hbar" style="display:flex;gap:12px;overflow-x:auto;padding:2px 16px 4px;scroll-snap-type:x mandatory">
-      ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="flex:none;width:214px;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:20px;padding:0;overflow:hidden;cursor:pointer;text-align:left;box-shadow:0 4px 16px rgba(58,42,29,.04)"><div style="height:110px;position:relative">${garageThumb(214,110,i)}<span style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.94);color:var(--ink);padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:600"><span style="color:#5C3A21">${ic('star',11,'#5C3A21')}</span>${g.rating}</span><span style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:999px;background:rgba(253,253,251,.92);display:grid;place-items:center;color:var(--terra)">${ic('heart',15,'var(--terra)')}</span></div><div style="padding:12px 13px 14px"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</strong><span style="color:var(--forest);flex:none">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:4px 0 0;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</p><p style="margin:8px 0 0;font-size:12px;font-weight:700;color:var(--ink)">From ${g.from} ETB</p></div></button>`).join('')}
+      ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" class="gg-t" style="flex:none;width:214px;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:20px;padding:0;overflow:hidden;cursor:pointer;text-align:left;box-shadow:0 4px 16px rgba(58,42,29,.04)"><div style="height:110px;position:relative">${garageThumb(214,110,i)}<span style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.94);color:var(--ink);padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:600"><span style="color:#5C3A21">${ic('star',11,'#5C3A21')}</span>${g.rating}</span><span style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:999px;background:rgba(253,253,251,.92);display:grid;place-items:center;color:var(--terra)">${ic('heart',15,'var(--terra)')}</span></div><div style="padding:12px 13px 14px"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.name}</strong><span style="color:var(--forest);flex:none">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:4px 0 0;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</p><p style="margin:8px 0 0;font-size:12px;font-weight:700;color:var(--ink)">From ${g.from} ETB</p></div></button>`).join('')}
     </div>
   </div>
 
@@ -457,7 +489,7 @@ screens.home=()=>`
   <div class="gg-rise" style="animation-delay:.2s;padding:24px 16px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 12px"><h2 style="margin:0;font-family:Outfit,sans-serif;font-size:17px;font-weight:700;color:var(--ink)">Nearby you</h2><button type="button" onclick="nav('search')" aria-label="See all nearby" style="border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:0">See all</button></div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      ${garages.slice(0,3).map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:11px;display:flex;gap:12px;cursor:pointer;text-align:left;align-items:center;box-shadow:0 2px 12px rgba(58,42,29,.04)">
+      ${garages.slice(0,3).map((g,i)=>`<button type="button" onclick="nav('garage')" class="gg-t reveal" style="--i:${i};border:1px solid var(--line);background:#fff;border-radius:18px;padding:11px;display:flex;gap:12px;cursor:pointer;text-align:left;align-items:center;box-shadow:0 2px 12px rgba(58,42,29,.04)">
         <span style="width:72px;height:72px;border-radius:15px;overflow:hidden;flex:none">${garageThumb(72,72,i+1)}</span>
         <span style="flex:1;min-width:0">
           <span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:700;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',12,'var(--forest)',2)}</span></span>
@@ -484,12 +516,12 @@ screens.search=()=>{
   </div>
   <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:var(--muted)">${garages.length} garages nearby</span><span style="font-size:12.5px;color:var(--forest);font-weight:600;display:flex;align-items:center;gap:5px">${ic('filter',15,'var(--forest)')}Sort: Distance</span></div>
   <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px">
-    ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left"><span style="width:78px;height:78px;border-radius:14px;overflow:hidden;flex:none">${garageThumb(78,78,i)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:600;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></span><span style="margin-top:3px;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</span><span style="margin-top:2px;font-size:11px;color:${g.openFg};font-weight:600">${g.hours}</span><span style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:8px"><span style="display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--ink)"><span style="color:#5C3A21">${ic('star',12,'#5C3A21')}</span>${g.rating}<span style="color:var(--faint);font-weight:400">(${g.reviews})</span></span><span style="font-size:11.5px;font-weight:700;color:var(--forest)">From ${g.from} ETB</span></span></span></button>`).join('')}
+    ${garages.map((g,i)=>`<button type="button" onclick="nav('garage')" class="gg-t reveal" style="--i:${i};border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left"><span style="width:78px;height:78px;border-radius:14px;overflow:hidden;flex:none">${garageThumb(78,78,i)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;font-weight:600;color:var(--ink)">${g.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></span><span style="margin-top:3px;font-size:11.5px;color:var(--muted)">${g.area} · ${g.dist}</span><span style="margin-top:2px;font-size:11px;color:${g.openFg};font-weight:600">${g.hours}</span><span style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:8px"><span style="display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--ink)"><span style="color:#5C3A21">${ic('star',12,'#5C3A21')}</span>${g.rating}<span style="color:var(--faint);font-weight:400">(${g.reviews})</span></span><span style="font-size:11.5px;font-weight:700;color:var(--forest)">From ${g.from} ETB</span></span></span></button>`).join('')}
   </div>
   <div style="height:118px"></div>
 </div>`;
 };
-function setChip(i){state.chip=i;render();}
+function setChip(i){state.chip=i;render('update');}
 
 /* GARAGE PROFILE + BOOKING */
 screens.garage=()=>{
@@ -514,9 +546,9 @@ screens.garage=()=>{
   <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(253,253,251,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:13px 16px 20px;display:flex;align-items:center;gap:12px"><div style="flex:1"><span style="font-size:11px;color:var(--muted)">Reservation fee</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:18px;font-weight:800;color:var(--ink)">100 ETB</strong></div><button type="button" class="gg-t" onclick="nav('pay')" aria-label="Confirm booking" style="flex:none;border:0;border-radius:14px;background:var(--forest);color:#fff;height:52px;padding:0 26px;font-family:Outfit,sans-serif;font-size:14.5px;font-weight:700;cursor:pointer">Confirm booking</button></div>
 </div>`;
 };
-function setSvc(i){state.service=i;render();}
-function setDay(i){state.day=i;render();}
-function setSlot(i){state.slot=i;render();}
+function setSvc(i){state.service=i;render('update');}
+function setDay(i){state.day=i;render('update');}
+function setSlot(i){state.slot=i;render('update');}
 
 /* Telebirr pay sheet (mock) */
 screens.pay=()=>screens.garage();
@@ -573,7 +605,7 @@ screens.emergency=()=>`
     <h1 style="margin:0;font-family:Outfit,sans-serif;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.5px">Emergency mechanic</h1>
     <div style="margin-top:16px;background:linear-gradient(140deg,#5C3A21,#4A2E19);border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden">
       <div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.92">${ic('bolt',15,'#fff',2.4)} STRANDED?</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.92"><span class="pulse" style="width:8px;height:8px;border-radius:99px;background:#fff;flex:none"></span>${ic('bolt',15,'#fff',2.4)} STRANDED?</div>
       <h2 style="margin:8px 0 0;font-family:Outfit,sans-serif;font-size:20px;font-weight:800;line-height:1.15">I need a mechanic<br>now</h2>
       <p style="margin:8px 0 0;font-size:12.5px;opacity:.94;max-width:240px">Share your location and we'll dispatch the nearest verified mechanic.</p>
       <button type="button" class="gg-t" onclick="toast('Locating nearby mechanics…')" aria-label="Get Emergency Help" style="margin-top:14px;border:0;border-radius:13px;background:#fff;color:#5C3A21;height:46px;padding:0 20px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px">${ic('pin',17,'#5C3A21',2)}Locate me & dispatch</button>
@@ -581,7 +613,7 @@ screens.emergency=()=>`
   </div>
   <div style="padding:22px 16px 0"><h2 style="margin:0 0 12px;font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:var(--ink)">Verified mechanics nearby</h2>
     <div style="display:flex;flex-direction:column;gap:11px">
-      ${mechanics.map(m=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px"><div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;flex:none">${m.name[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;color:var(--ink)">${m.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:2px 0 0;font-size:11.5px;color:var(--muted)">${m.area} · ${m.exp} exp</p></div><div style="text-align:right;flex:none"><span style="font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${m.eta}</span><p style="margin:4px 0 0;font-size:10.5px;color:var(--faint)">${m.dist}</p></div></div><div class="hbar" style="margin-top:10px;display:flex;gap:6px;overflow-x:auto">${m.tags.map(t=>chipTag(t)).join('')}</div><div style="margin-top:11px;display:flex;gap:8px"><button type="button" onclick="toast('Requesting ${m.name}…')" style="flex:1;border:0;border-radius:12px;background:var(--forest);color:#fff;height:42px;font-size:12.5px;font-weight:700;cursor:pointer">Request now</button><button type="button" aria-label="Call ${m.name}" style="width:44px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2)">${ic('phone',18)}</button></div></div>`).join('')}
+      ${mechanics.map((m,i)=>`<div class="reveal" style="--i:${i};border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px"><div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;flex:none">${m.name[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px"><strong style="font-size:14px;color:var(--ink)">${m.name}</strong><span style="color:var(--forest)">${ic('shield',13,'var(--forest)',2)}</span></div><p style="margin:2px 0 0;font-size:11.5px;color:var(--muted)">${m.area} · ${m.exp} exp</p></div><div style="text-align:right;flex:none"><span style="font-size:11px;font-weight:700;color:var(--forest);background:var(--forest-t);border-radius:999px;padding:4px 9px">${m.eta}</span><p style="margin:4px 0 0;font-size:10.5px;color:var(--faint)">${m.dist}</p></div></div><div class="hbar" style="margin-top:10px;display:flex;gap:6px;overflow-x:auto">${m.tags.map(t=>chipTag(t)).join('')}</div><div style="margin-top:11px;display:flex;gap:8px"><button type="button" onclick="toast('Requesting ${m.name}…')" class="gg-t" style="flex:1;border:0;border-radius:12px;background:var(--forest);color:#fff;height:42px;font-size:12.5px;font-weight:700;cursor:pointer">Request now</button><button type="button" aria-label="Call ${m.name}" class="gg-t" style="width:44px;border:1px solid var(--line);border-radius:12px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink2)">${ic('phone',18)}</button></div></div>`).join('')}
     </div>
   </div>
   <div style="height:118px"></div>
@@ -607,7 +639,7 @@ screens.roadside=()=>`
   <div style="padding:18px 16px 0">${tealBtn('Request assistance','home','Request Towing')}</div>
   <div style="height:118px"></div>
 </div>`;
-function setRoad(i){state.road=i;render();}
+function setRoad(i){state.road=i;render('update');}
 
 /* MARKETPLACE */
 screens.market=()=>`
@@ -617,7 +649,7 @@ screens.market=()=>`
     <div class="hbar" style="margin-top:12px;display:flex;gap:8px;overflow-x:auto">${['All','Car parts','Tyres','Oils','Accessories','Tools'].map((c,i)=>`<button type="button" style="flex:none;border:1px solid ${i===0?DARK:'var(--line2)'};background:${i===0?DARK:'#fff'};color:${i===0?'#fff':'var(--ink2)'};border-radius:999px;height:34px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${c}</button>`).join('')}</div>
   </div>
   <div style="padding:16px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    ${products.map((p,i)=>`<div style="border:1px solid var(--line);background:#fff;border-radius:18px;overflow:hidden"><div style="height:96px;position:relative">${garageThumb(200,96,i+1)}${p.tag?`<span style="position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;color:#fff;background:var(--terra);border-radius:999px;padding:3px 8px">${p.tag}</span>`:''}</div><div style="padding:11px 12px 13px"><strong style="display:block;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.25">${p.n}</strong><p style="margin:4px 0 0;font-size:10.5px;color:var(--muted)">${p.c}</p><p style="margin:7px 0 0;font-family:Outfit,sans-serif;font-size:14px;font-weight:800;color:var(--forest)">${p.p} ETB</p></div></div>`).join('')}
+    ${products.map((p,i)=>`<div class="gg-t reveal" style="--i:${i%2};border:1px solid var(--line);background:#fff;border-radius:18px;overflow:hidden"><div style="height:96px;position:relative">${garageThumb(200,96,i+1)}${p.tag?`<span style="position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;color:#fff;background:var(--terra);border-radius:999px;padding:3px 8px">${p.tag}</span>`:''}</div><div style="padding:11px 12px 13px"><strong style="display:block;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.25">${p.n}</strong><p style="margin:4px 0 0;font-size:10.5px;color:var(--muted)">${p.c}</p><p style="margin:7px 0 0;font-family:Outfit,sans-serif;font-size:14px;font-weight:800;color:var(--forest)">${p.p} ETB</p></div></div>`).join('')}
   </div>
   <div style="height:118px"></div>
   <button type="button" onclick="toast('Opening chat with seller…')" aria-label="Contact seller" style="position:absolute;right:18px;bottom:130px;z-index:30;border:0;border-radius:16px;background:var(--surface);color:#FDFDFB;height:52px;padding:0 20px;display:flex;align-items:center;gap:9px;font-family:Outfit,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 26px rgba(194,155,116,.35)">${ic('chat',19,'#FDFDFB',2)}Contact seller</button>
@@ -627,8 +659,8 @@ screens.market=()=>`
 screens.profile=()=>`
 <div class="gg-rise">
   <div style="padding:56px 16px 0;text-align:center"><div style="width:76px;height:76px;border-radius:24px;margin:0 auto;background:linear-gradient(135deg,#5C3A21,#5C3A21);display:grid;place-items:center;color:#FDFDFB;font-family:Outfit,sans-serif;font-weight:700;font-size:28px">D</div><h1 style="margin:12px 0 0;font-family:Outfit,sans-serif;font-size:21px;font-weight:700;color:var(--ink)">Dawit Mekonnen</h1><p style="margin:3px 0 0;font-size:12.5px;color:var(--muted)">+251 91 •• •• 42 · Bole, Addis Ababa</p></div>
-  <div style="margin:18px 16px 0;background:var(--surface);border-radius:22px;padding:18px;color:#fff;position:relative;overflow:hidden"><div style="position:absolute;right:-24px;bottom:-24px;width:120px;height:120px;border-radius:50%;background:rgba(194,155,116,.16)"></div><div style="display:flex;justify-content:space-between;align-items:start;position:relative"><div><span style="font-size:11.5px;color:#EDE9E3">Garage Go points</span><strong style="display:block;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#fff;line-height:1">640</strong></div><button type="button" onclick="toast('Rewards coming soon')" style="border:1px solid rgba(253,253,251,.24);background:rgba(253,253,251,.08);color:#FDFDFB;border-radius:11px;height:36px;padding:0 13px;font-size:11.5px;font-weight:600;cursor:pointer">View rewards</button></div><div style="margin-top:14px;display:flex;gap:18px;position:relative">${[['24','Bookings'],['6','Saved'],['4.9','Rating']].map(([v,k])=>`<div><strong style="font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:#fff">${v}</strong><p style="margin:1px 0 0;font-size:10.5px;color:#EDE9E3">${k}</p></div>`).join('')}</div></div>
-  <div style="margin:18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden">${profileMenu.map((m,i)=>`<button type="button" style="width:100%;border:0;background:none;padding:14px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;${i?'border-top:1px solid #E6E4E0':''}"><span style="width:38px;height:38px;border-radius:11px;background:var(--ground);color:var(--ink2);display:grid;place-items:center;flex:none">${ic(m.icon,18,'var(--ink2)')}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13.5px;font-weight:600;color:var(--ink)">${m.t}</strong><span style="font-size:11.5px;color:var(--muted)">${m.d}</span></span><span style="color:#DEDBD7">${ic('chevR',16,'#DEDBD7')}</span></button>`).join('')}</div>
+  <div class="reveal" style="margin:18px 16px 0;background:var(--surface);border-radius:22px;padding:18px;color:#fff;position:relative;overflow:hidden"><div style="position:absolute;right:-24px;bottom:-24px;width:120px;height:120px;border-radius:50%;background:rgba(194,155,116,.16)"></div><div style="display:flex;justify-content:space-between;align-items:start;position:relative"><div><span style="font-size:11.5px;color:#EDE9E3">Garage Go points</span><strong data-count="640" style="display:block;font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#fff;line-height:1">0</strong></div><button type="button" onclick="toast('Rewards coming soon')" style="border:1px solid rgba(253,253,251,.24);background:rgba(253,253,251,.08);color:#FDFDFB;border-radius:11px;height:36px;padding:0 13px;font-size:11.5px;font-weight:600;cursor:pointer">View rewards</button></div><div style="margin-top:14px;display:flex;gap:18px;position:relative">${[['24','Bookings'],['6','Saved'],['4.9','Rating']].map(([v,k])=>`<div><strong data-count="${v}" style="font-family:Outfit,sans-serif;font-size:16px;font-weight:700;color:#fff">0</strong><p style="margin:1px 0 0;font-size:10.5px;color:#EDE9E3">${k}</p></div>`).join('')}</div></div>
+  <div class="reveal" style="--i:1;margin:18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden">${profileMenu.map((m,i)=>`<button type="button" style="width:100%;border:0;background:none;padding:14px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;${i?'border-top:1px solid #E6E4E0':''}"><span style="width:38px;height:38px;border-radius:11px;background:var(--ground);color:var(--ink2);display:grid;place-items:center;flex:none">${ic(m.icon,18,'var(--ink2)')}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:13.5px;font-weight:600;color:var(--ink)">${m.t}</strong><span style="font-size:11.5px;color:var(--muted)">${m.d}</span></span><span style="color:#DEDBD7">${ic('chevR',16,'#DEDBD7')}</span></button>`).join('')}</div>
   <div style="padding:16px"><button type="button" onclick="nav('welcome')" style="width:100%;height:48px;border:1px solid var(--line2);background:#fff;border-radius:15px;font-size:13.5px;font-weight:600;color:var(--terra-d);cursor:pointer">Sign out</button></div>
   <div style="height:40px"></div>
 </div>`;
@@ -641,13 +673,19 @@ const tabs=[
   {key:'profile',label:'Profile',icon:'user'},
 ];
 const tabScreens=['home','search','market','profile','emergency','roadside'];
+// Screen depth → lets us infer forward (deeper) vs back (shallower) motion.
+const depth={welcome:0,started:1,signin:1,signup:1,home:2,market:2,profile:2,search:3,emergency:3,roadside:3,garage:4,confirm:5};
 let current='welcome';
+let enterCls='pg-fade';
 function nav(key){
   if(key==='pay'){openPaySheet();return;}
   // Reset the OTP step whenever we (re)enter an auth screen.
   if(key==='signin'){state.otpSent=false;}
   if(key==='signup'){state.otpSentUp=false;}
-  current=key;render();scr.scrollTop=0;
+  const df=depth[current]??2, dt=depth[key]??2;
+  // Peer tabs (same depth) crossfade; otherwise slide by direction of travel.
+  enterCls = df===dt ? 'pg-fade' : (dt>df ? 'pg-fwd' : 'pg-back');
+  current=key;render('nav');scr.scrollTop=0;
 }
 let welcomeTimer=null;
 function welcomeMount(){
@@ -660,10 +698,41 @@ function welcomeMount(){
   // keep dots in sync if the user swipes manually
   car.addEventListener('scroll',()=>{ const k=Math.round(car.scrollLeft/car.clientWidth); if(k!==i){ i=k; paint(); } },{passive:true});
 }
-function render(){
+/* Scroll-reveal: elements with .reveal rise in as they enter the viewport. */
+let _io=null;
+function armReveals(){
+  if(_io)_io.disconnect();
+  const els=[...scr.querySelectorAll('.reveal')];
+  if(!els.length)return;
+  els.forEach(e=>e.classList.remove('in'));
+  _io=new IntersectionObserver((ents)=>{
+    ents.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');_io.unobserve(en.target);}});
+  },{root:scr,threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  els.forEach(e=>_io.observe(e));
+}
+/* Count-up: any [data-count] tweens from 0 to its target with an ease-out. */
+function runCounters(){
+  scr.querySelectorAll('[data-count]').forEach(elm=>{
+    const raw=elm.dataset.count, dec=raw.includes('.')?1:0, target=parseFloat(raw), t0=performance.now(), dur=900;
+    const step=(t)=>{const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+      elm.textContent=(target*e).toFixed(dec);
+      if(p<1)requestAnimationFrame(step); else elm.textContent=dec?target.toFixed(1):Math.round(target);};
+    requestAnimationFrame(step);
+  });
+}
+function render(mode){
   if(welcomeTimer){clearInterval(welcomeTimer);welcomeTimer=null;}
+  const silent = mode==='update';
+  scr.classList.remove('pg-fwd','pg-back','pg-fade','no-anim');
+  if(silent) scr.classList.add('no-anim');
   scr.innerHTML=(screens[current]||screens.home)();
-  if(current==='welcome') welcomeMount();
+  if(!silent){
+    void scr.offsetWidth;            // reflow so the enter animation restarts
+    scr.classList.add(enterCls);
+    if(current==='welcome') welcomeMount();
+    armReveals();
+    runCounters();
+  }
   const tb=el('tabbar');
   if(tabScreens.includes(current)){
     tb.hidden=false;
@@ -673,5 +742,15 @@ function render(){
     }).join('');
   }else{tb.hidden=true;tb.innerHTML='';}
 }
-render();
+/* Delegated tap ripple for primary/interactive surfaces (.gg-t). */
+scr.addEventListener('pointerdown',(e)=>{
+  const b=e.target.closest('.gg-t'); if(!b)return;
+  const rect=b.getBoundingClientRect(), d=Math.max(rect.width,rect.height);
+  const r=document.createElement('span'); r.className='rip';
+  r.style.width=r.style.height=d+'px';
+  r.style.left=(e.clientX-rect.left-d/2)+'px';
+  r.style.top=(e.clientY-rect.top-d/2)+'px';
+  b.appendChild(r); setTimeout(()=>r.remove(),560);
+});
+render('nav');
 </script>

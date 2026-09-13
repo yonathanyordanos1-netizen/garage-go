@@ -7,7 +7,10 @@ export type IconName =
   | 'check' | 'clock' | 'heart' | 'wallet' | 'help' | 'gear' | 'home'
   | 'bag' | 'user' | 'chat' | 'chevL' | 'chevR' | 'mail' | 'lock'
   | 'eye' | 'eyeoff' | 'apple' | 'pin' | 'bell' | 'search' | 'filter'
-  | 'star' | 'shield' | 'birr' | 'phone' | 'garage';
+  | 'star' | 'shield' | 'birr' | 'phone' | 'garage'
+  | 'sun' | 'moon' | 'calendar' | 'x' | 'info' | 'alertCircle' | 'checkCircle'
+  | 'plus' | 'logout' | 'share' | 'arrowR' | 'sliders' | 'gift' | 'sparkle'
+  | 'edit' | 'trash' | 'map' | 'bookmark';
 
 type Props = { name: IconName; size?: number; color?: string; strokeWidth?: number };
 
@@ -149,6 +152,79 @@ export function Icon({ name, size = 20, color = colors.ink2, strokeWidth = 1.9 }
           <Rect x={8} y={13.4} width={8} height={6.6} rx={1} stroke={color} strokeWidth={strokeWidth} fill="none" />
           {p('M8 16.7h8')}
         </>);
+      case 'sun':
+        return (<>
+          <Circle cx={12} cy={12} r={4} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4l1.4-1.4M18 6l1.4-1.4')}
+        </>);
+      case 'moon':
+        return p('M20 14.5A8 8 0 1 1 9.5 4 6.2 6.2 0 0 0 20 14.5z');
+      case 'calendar':
+        return (<>
+          <Rect x={4} y={5} width={16} height={16} rx={2.5} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M4 9.5h16M8 3.5v3.5M16 3.5v3.5')}
+        </>);
+      case 'x':
+        return p('M6 6l12 12M18 6L6 18');
+      case 'info':
+        return (<>
+          <Circle cx={12} cy={12} r={8.5} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M12 11v5M12 7.6h.01')}
+        </>);
+      case 'alertCircle':
+        return (<>
+          <Circle cx={12} cy={12} r={8.5} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M12 7.5v5.5M12 16.4h.01')}
+        </>);
+      case 'checkCircle':
+        return (<>
+          <Circle cx={12} cy={12} r={8.5} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M8.4 12.2l2.5 2.5 4.7-5.3')}
+        </>);
+      case 'plus':
+        return p('M12 5v14M5 12h14');
+      case 'logout':
+        return (<>
+          {p('M13 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7')}
+          {p('M16 8l4 4-4 4M20 12H9')}
+        </>);
+      case 'share':
+        return (<>
+          <Circle cx={6} cy={12} r={2.4} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          <Circle cx={17} cy={6} r={2.4} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          <Circle cx={17} cy={18} r={2.4} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M8.1 10.9l6.8-3.6M8.1 13.1l6.8 3.6')}
+        </>);
+      case 'arrowR':
+        return p('M4 12h15M13 6l6 6-6 6');
+      case 'sliders':
+        return (<>
+          {p('M6 4v16M12 4v16M18 4v16')}
+          <Circle cx={6} cy={9} r={2.1} stroke={color} strokeWidth={strokeWidth} fill={color === 'none' ? 'none' : undefined} />
+          <Circle cx={12} cy={15} r={2.1} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          <Circle cx={18} cy={8} r={2.1} stroke={color} strokeWidth={strokeWidth} fill="none" />
+        </>);
+      case 'gift':
+        return (<>
+          <Rect x={4} y={9} width={16} height={11} rx={1.5} stroke={color} strokeWidth={strokeWidth} fill="none" />
+          {p('M4 13h16M12 9v11M12 9S9.8 4.8 7.5 6 9.5 9 12 9zM12 9s2.2-4.2 4.5-3S14.5 9 12 9z')}
+        </>);
+      case 'sparkle':
+        return p('M12 3l1.9 5.4L19.5 10l-5.6 1.6L12 17l-1.9-5.4L4.5 10l5.6-1.6z');
+      case 'edit':
+        return (<>
+          {p('M4 20h4l10-10-4-4L4 16v4z')}
+          {p('M13.5 6.5l4 4')}
+        </>);
+      case 'trash':
+        return p('M5 7h14M9 7V5h6v2M6.5 7l1 13h9l1-13');
+      case 'map':
+        return (<>
+          {p('M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2z')}
+          {p('M9 4v14M15 6v14')}
+        </>);
+      case 'bookmark':
+        return p('M7 4h10v16l-5-3-5 3z');
       default:
         return null;
     }

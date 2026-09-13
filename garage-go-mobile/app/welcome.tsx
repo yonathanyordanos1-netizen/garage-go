@@ -1,185 +1,124 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, Animated, ScrollView,
-  NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions,
+  View, Text, Pressable, ScrollView, useWindowDimensions,
+  NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
 import Svg, { Path, Circle, Rect, G, Line } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
-import { Icon, IconName } from '../lib/icons';
+import { useTheme } from '../lib/theme-context';
+import { Button } from '../components/ui';
+import * as haptics from '../lib/haptics';
 
-const FEATURES: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'garage', title: 'Book a Garage', body: 'Reserve a verified garage near you for a flat 100 ETB.' },
-  { icon: 'bolt', title: 'Emergency Help', body: 'Dispatch the nearest verified mechanic when you break down.' },
-  { icon: 'truck', title: 'Roadside & Towing', body: 'Battery, tyre, fuel or a flatbed — help is one tap away.' },
-];
+type Step = { eyebrow: string; title: string; body: string; cta: string };
 
-// Warm line-art hero: garage roofline + car + wrench + pin, umber strokes on bone.
-function Hero() {
+// A warm line-art hero shared across steps, tinted by theme.
+function Hero({ kind, ink, accent }: { kind: number; ink: string; accent: string }) {
   return (
-    <Svg width="100%" height={190} viewBox="0 0 320 190">
-      {/* ground line */}
-      <Line x1={20} y1={150} x2={300} y2={150} stroke={colors.line2} strokeWidth={2} />
-      {/* garage building */}
-      <G stroke={colors.ink} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={0.9}>
-        <Path d="M52 74 96 48l44 26" />
-        <Path d="M62 70v56M130 70v56M62 126h68" />
-        <Rect x={78} y={92} width={36} height={34} rx={3} />
-        <Path d="M78 108h36" />
-      </G>
-      {/* sun / accent disc */}
-      <Circle cx={244} cy={52} r={20} fill={colors.terra} opacity={0.18} />
-      <Circle cx={244} cy={52} r={20} stroke={colors.terra} strokeWidth={2} fill="none" opacity={0.6} />
-      {/* car */}
-      <G>
-        <Path d="M150 138c3-16 9-26 22-27h30c10 0 16 6 22 16l10 4c6 2 9 6 9 12v7c0 3-2 5-5 5H157c-4 0-7-3-7-7z"
-          fill="none" stroke={colors.ink} strokeWidth={2.6} strokeLinejoin="round" />
-        <Path d="M176 118h22c7 0 11 4 14 11" fill="none" stroke={colors.ink} strokeWidth={2.2} strokeLinecap="round" />
-        <Circle cx={172} cy={150} r={9} fill={colors.ground} stroke={colors.ink} strokeWidth={2.4} />
-        <Circle cx={224} cy={150} r={9} fill={colors.ground} stroke={colors.ink} strokeWidth={2.4} />
-      </G>
-      {/* wrench accent (sand) */}
-      <G x={120} y={96} rotation={-28} originX={0} originY={0}>
-        <Path d="M0 0h26" stroke={colors.terra} strokeWidth={5} strokeLinecap="round" />
-        <Circle cx={32} cy={0} r={7} fill={colors.terra} />
-      </G>
-      {/* location pin (sand) */}
-      <G x={100} y={30}>
-        <Path d="M10 30c0-8-6-14-14-14S-18 22-18 30c0 10 14 22 14 22S10 40 10 30z"
-          fill="none" stroke={colors.terra} strokeWidth={2.4} />
-        <Circle cx={0} cy={28} r={4} fill={colors.terra} />
-      </G>
+    <Svg width="100%" height={210} viewBox="0 0 320 210">
+      <Line x1={24} y1={168} x2={296} y2={168} stroke={accent} strokeOpacity={0.4} strokeWidth={2} />
+      {kind === 0 && (
+        <>
+          <G stroke={ink} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <Path d="M96 70 150 40l54 30" />
+            <Path d="M108 64v88M192 64v88M108 152h84" />
+            <Rect x={132} y={98} width={36} height={54} rx={3} />
+            <Path d="M132 120h36" />
+          </G>
+          <Circle cx={244} cy={58} r={22} fill={accent} opacity={0.18} />
+          <Circle cx={244} cy={58} r={22} stroke={accent} strokeWidth={2} fill="none" />
+        </>
+      )}
+      {kind === 1 && (
+        <>
+          <G fill="none" stroke={ink} strokeLinejoin="round">
+            <Path d="M96 150c3-18 10-30 26-31h44c14 0 22 7 30 20l14 6c8 3 12 8 12 14v8c0 4-3 6-6 6H104c-5 0-8-3-8-8z" strokeWidth={2.8} />
+            <Path d="M132 119h30c9 0 15 5 19 14" strokeWidth={2.4} strokeLinecap="round" />
+          </G>
+          <Circle cx={128} cy={168} r={12} fill="none" stroke={ink} strokeWidth={2.6} />
+          <Circle cx={200} cy={168} r={12} fill="none" stroke={ink} strokeWidth={2.6} />
+          <G transform="translate(214 70)"><Path d="M0 22c0-8-6-14-14-14S-22 14-22 22c0 10 14 22 14 22S0 32 0 22z" fill={accent} opacity={0.9} /><Circle cx={-8} cy={20} r={5} fill="#fff" /></G>
+        </>
+      )}
+      {kind === 2 && (
+        <>
+          <G stroke={ink} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <Path d="M120 70 60 130h34l-8 46 60-66h-32l8-40z" fill={accent} fillOpacity={0.18} />
+          </G>
+          <Circle cx={228} cy={150} r={30} stroke={ink} strokeWidth={2.6} fill="none" />
+          <Path d="M228 134v16l10 8" stroke={ink} strokeWidth={2.6} strokeLinecap="round" fill="none" />
+        </>
+      )}
     </Svg>
   );
 }
 
-function useStagger(count: number) {
-  const vals = useRef([...Array(count)].map(() => new Animated.Value(0))).current;
-  useEffect(() => {
-    Animated.stagger(90, vals.map((v) =>
-      Animated.timing(v, { toValue: 1, duration: 460, useNativeDriver: true })
-    )).start();
-  }, [vals]);
-  return vals.map((v) => ({
-    opacity: v,
-    transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
-  }));
-}
-
 export default function Welcome() {
   const router = useRouter();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const cardW = Math.min(width, 480) - 44; // content max-width, minus padding
+  const pad = 24;
+  const pageW = width;
+  const scroller = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
-  const anim = useStagger(6);
+
+  const steps: Step[] = [
+    { eyebrow: 'GET STARTED', title: 'Welcome to\nGarage Go', body: "Ethiopia's trusted garage and roadside network — verified, transparent, one tap away.", cta: 'Get Started' },
+    { eyebrow: 'BOOK & CONFIRM', title: 'Book a garage\nin three taps', body: 'Reserve a verified garage, pick a time slot, and confirm with Telebirr for a flat 100 ETB.', cta: 'Continue' },
+    { eyebrow: 'ON THE ROAD', title: 'Help when\nyou break down', body: 'Emergency mechanics, battery, tyre, fuel or a flatbed tow — dispatched to your location.', cta: 'Create account' },
+  ];
 
   function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
-    setPage(Math.round(e.nativeEvent.contentOffset.x / cardW));
+    const p = Math.round(e.nativeEvent.contentOffset.x / pageW);
+    if (p !== page) { setPage(p); haptics.select(); }
+  }
+  function advance() {
+    if (page < steps.length - 1) scroller.current?.scrollTo({ x: (page + 1) * pageW, animated: true });
+    else router.push('/sign-up');
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 18 }]}>
-      <View style={styles.inner}>
-        {/* Brand + Skip */}
-        <Animated.View style={[styles.topRow, anim[0]]}>
-          <View style={styles.brand}>
-            <View style={styles.brandMark}><Icon name="wrench" size={17} color={colors.ground} strokeWidth={2} /></View>
-            <Text style={styles.brandName}>Garage Go</Text>
+    <View style={{ flex: 1, backgroundColor: colors.ground, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 18 }}>
+      {/* Top row: dots + Skip */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: pad }}>
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+          {steps.map((_, i) => (
+            <View key={i} style={{ width: i === page ? 22 : 7, height: 7, borderRadius: 99, backgroundColor: i === page ? colors.forest : colors.line2 }} />
+          ))}
+        </View>
+        <Pressable onPress={() => router.push('/sign-in')} hitSlop={8} accessibilityLabel="Skip">
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.muted, padding: 6 }}>Skip</Text>
+        </Pressable>
+      </View>
+
+      {/* Pager */}
+      <ScrollView
+        ref={scroller}
+        horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onScroll}
+        style={{ flexGrow: 0 }}
+      >
+        {steps.map((s, i) => (
+          <View key={i} style={{ width: pageW, paddingHorizontal: pad, paddingTop: 18 }}>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 28, paddingVertical: 12, overflow: 'hidden' }}>
+              <Hero kind={i} ink={colors.ink} accent={colors.accent} />
+            </View>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.accent, marginTop: 26 }}>{s.eyebrow}</Text>
+            <Text style={{ fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.8, lineHeight: 37, marginTop: 8 }}>{s.title}</Text>
+            <Text style={{ fontSize: 14.5, lineHeight: 22, color: colors.muted, marginTop: 12, maxWidth: 320 }}>{s.body}</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Skip onboarding" onPress={() => router.replace('/(tabs)')} hitSlop={8}>
-            <Text style={styles.skip}>Skip</Text>
-          </Pressable>
-        </Animated.View>
+        ))}
+      </ScrollView>
 
-        {/* Hero */}
-        <Animated.View style={[styles.hero, anim[1]]}>
-          <Hero />
-        </Animated.View>
-
-        {/* Headline */}
-        <Animated.View style={anim[2]}>
-          <Text style={styles.h1} accessibilityRole="header">Welcome to{'\n'}Garage Go</Text>
-          <Text style={styles.sub}>
-            On-demand garages, mechanics and roadside help across Ethiopia — verified, transparent, one tap away.
-          </Text>
-        </Animated.View>
-
-        {/* Feature carousel */}
-        <Animated.View style={[{ marginTop: 20 }, anim[3]]}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-            snapToInterval={cardW}
-            decelerationRate="fast"
-          >
-            {FEATURES.map((f) => (
-              <View key={f.title} style={[styles.slide, { width: cardW }]} accessibilityLabel={f.title}>
-                <View style={styles.slideIcon}><Icon name={f.icon} size={22} color={colors.forest} strokeWidth={2} /></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.slideTitle}>{f.title}</Text>
-                  <Text style={styles.slideBody}>{f.body}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-          <View style={styles.dots}>
-            {FEATURES.map((_, i) => (
-              <View key={i} style={[styles.dot, {
-                width: i === page ? 20 : 6,
-                backgroundColor: i === page ? colors.forest : 'rgba(58,42,29,0.18)',
-              }]} />
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* CTA */}
-        <Animated.View style={[{ marginTop: 'auto' }, anim[4]]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Get started"
-            onPress={() => router.push('/get-started')}
-            style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.9 : 1 }]}
-          >
-            <Text style={styles.ctaText}>Get started</Text>
-            <Icon name="chevR" size={18} color={colors.ink} strokeWidth={2.2} />
-          </Pressable>
-        </Animated.View>
-
-        <Animated.View style={anim[5]}>
-          <Text style={styles.footer}>
-            Already have an account?{' '}
-            <Text style={styles.link} accessibilityRole="link" onPress={() => router.push('/sign-in')}>Sign in</Text>
-          </Text>
-        </Animated.View>
+      {/* CTA + sign in */}
+      <View style={{ marginTop: 'auto', paddingHorizontal: pad, paddingTop: 20 }}>
+        <Button label={steps[page].cta} onPress={advance} iconRight="arrowR" size="lg" />
+        <Text style={{ textAlign: 'center', fontSize: 13.5, color: colors.muted, marginTop: 16 }}>
+          Already have an account?{' '}
+          <Text onPress={() => router.push('/sign-in')} style={{ fontWeight: '700', color: colors.ink, textDecorationLine: 'underline' }}>Sign in</Text>
+        </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.ground, paddingHorizontal: 22 },
-  inner: { flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  brandMark: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  brandName: { fontSize: 15, fontWeight: '700', color: colors.ink, letterSpacing: 0.2 },
-  skip: { fontSize: 13, fontWeight: '600', color: colors.muted, padding: 6 },
-  hero: { marginTop: 10, alignItems: 'center' },
-  h1: { marginTop: 8, fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.8, lineHeight: 36 },
-  sub: { marginTop: 12, fontSize: 14, lineHeight: 21, color: colors.muted, maxWidth: 300 },
-  slide: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingRight: 8 },
-  slideIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: 'rgba(194,155,116,0.16)', alignItems: 'center', justifyContent: 'center' },
-  slideTitle: { fontSize: 15, fontWeight: '700', color: colors.ink },
-  slideBody: { marginTop: 3, fontSize: 12.5, lineHeight: 18, color: colors.muted },
-  dots: { flexDirection: 'row', gap: 6, marginTop: 16, paddingLeft: 4 },
-  dot: { height: 6, borderRadius: 999 },
-  cta: { height: 54, borderRadius: 16, backgroundColor: colors.forest, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  ctaText: { fontSize: 15, fontWeight: '700', color: colors.ink },
-  footer: { marginTop: 16, textAlign: 'center', fontSize: 13, color: colors.muted },
-  link: { fontWeight: '700', color: colors.ink },
-});

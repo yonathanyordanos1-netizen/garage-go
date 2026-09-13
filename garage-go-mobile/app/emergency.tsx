@@ -1,103 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Linking } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { View, Text, ScrollView, Pressable, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
-import { Icon } from '../lib/icons';
-import { Tag } from '../components/ui';
-import { supabase } from '../lib/supabase';
+import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
-
-type Mechanic = { id: string; name: string; phone: string; area: string; experience: string; tags: string[] };
+import { Card, Badge, Button, IconButton, radius } from '../components/ui';
+import { Icon } from '../lib/icons';
+import { mechanics } from '../lib/data';
 
 export default function Emergency() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const toast = useToast();
-  const [mechanics, setMechanics] = useState<Mechanic[]>([]);
-
-  useEffect(() => {
-    supabase.from('mechanics').select('*').eq('verified', true).order('rating', { ascending: false })
-      .then(({ data }) => setMechanics((data as Mechanic[]) ?? []));
-  }, []);
-
-  const etas = ['6 min', '11 min', '17 min'];
-  const dists = ['1.4 km', '3.2 km', '5.0 km'];
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}>
-      <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={styles.back}>
-          <Icon name="chevL" size={18} color={colors.ink2} />
-        </Pressable>
-        <Text style={styles.h1}>Emergency mechanic</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <IconButton icon="chevL" onPress={() => router.back()} />
+        <Text style={{ fontSize: 22, fontWeight: '800', color: colors.ink }}>Emergency mechanic</Text>
       </View>
 
-      <LinearGradient colors={['#3A2A1D', '#2E2013']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.banner}>
+      <View style={{ backgroundColor: colors.espresso, borderRadius: radius.xl, padding: 20, marginTop: 16, overflow: 'hidden' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Icon name="bolt" size={15} color={colors.terra} strokeWidth={2.4} />
-          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.terra, letterSpacing: 0.4 }}>STRANDED?</Text>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error }} />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.onEspresso, letterSpacing: 0.5 }}>STRANDED?</Text>
         </View>
-        <Text style={styles.bannerTitle}>I need a mechanic{'\n'}now</Text>
-        <Text style={styles.bannerSub}>Share your location and we'll dispatch the nearest verified mechanic.</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Get Emergency Help" onPress={() => toast('Locating nearby mechanics…')} style={styles.locateBtn}>
-          <Icon name="pin" size={17} color="#3A2A1D" strokeWidth={2} />
-          <Text style={{ color: '#3A2A1D', fontSize: 13.5, fontWeight: '700' }}>Locate me & dispatch</Text>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: colors.onEspresso, marginTop: 8, lineHeight: 25 }}>I need a mechanic{'\n'}now</Text>
+        <Text style={{ fontSize: 12.5, color: colors.onEspressoMuted, marginTop: 8, maxWidth: 240 }}>Share your location and we'll dispatch the nearest verified mechanic.</Text>
+        <Pressable onPress={() => toast.info('Locating nearby mechanics…')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 14, height: 46, paddingHorizontal: 18, borderRadius: radius.md, backgroundColor: colors.onEspresso }}>
+          <Icon name="pin" size={17} color={colors.espresso} strokeWidth={2} />
+          <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.espresso }}>Locate me & dispatch</Text>
         </Pressable>
-      </LinearGradient>
+      </View>
 
-      <View style={{ paddingHorizontal: 16, marginTop: 22 }}>
-        <Text style={styles.h2}>Verified mechanics nearby</Text>
-        <View style={{ gap: 11 }}>
-          {mechanics.map((m, i) => (
-            <View key={m.id} style={styles.card}>
+      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 12 }}>Verified mechanics nearby</Text>
+      <View style={{ gap: 11 }}>
+        {mechanics.map((m) => (
+          <Card key={m.name}>
+            <View style={{ padding: 13 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
-                <View style={styles.avatar}><Text style={styles.avatarText}>{m.name[0]}</Text></View>
+                <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: colors.onPrimary, fontWeight: '700', fontSize: 16 }}>{m.name[0]}</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.ink }}>{m.name}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{m.name}</Text>
                     <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />
                   </View>
-                  <Text style={{ marginTop: 2, fontSize: 11.5, color: colors.muted }}>{m.area} · {m.experience} exp</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 2 }}>{m.area} · {m.exp} exp</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <View style={styles.etaPill}><Text style={{ fontSize: 11, fontWeight: '700', color: colors.ink }}>{etas[i] ?? '—'}</Text></View>
-                  <Text style={{ marginTop: 4, fontSize: 10.5, color: colors.faint }}>{dists[i] ?? ''}</Text>
+                  <Badge label={m.eta} variant="secondary" />
+                  <Text style={{ fontSize: 10.5, color: colors.faint, marginTop: 4 }}>{m.dist}</Text>
                 </View>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }} contentContainerStyle={{ gap: 6 }}>
-                {(m.tags ?? []).map((t) => <Tag key={t} label={t} />)}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 10 }}>
+                {m.tags.map((t) => <Badge key={t} label={t} variant="outline" />)}
               </ScrollView>
-              <View style={{ marginTop: 11, flexDirection: 'row', gap: 8 }}>
-                <Pressable accessibilityRole="button" onPress={() => toast('Requesting ' + m.name + '…')} style={styles.requestBtn}>
-                  <Text style={{ color: colors.ink, fontSize: 12.5, fontWeight: '700' }}>Request now</Text>
-                </Pressable>
-                <Pressable accessibilityRole="button" accessibilityLabel={'Call ' + m.name} onPress={() => Linking.openURL('tel:' + m.phone.replace(/\s/g, ''))} style={styles.callBtn}>
-                  <Icon name="phone" size={18} color={colors.ink2} />
-                </Pressable>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 11 }}>
+                <View style={{ flex: 1 }}>
+                  <Button label="Request now" size="sm" onPress={() => toast.success(`Requesting ${m.name}…`)} />
+                </View>
+                <IconButton icon="phone" onPress={() => Linking.openURL('tel:' + m.phone)} label={`Call ${m.name}`} />
               </View>
             </View>
-          ))}
-        </View>
+          </Card>
+        ))}
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  back: { width: 40, height: 40, borderRadius: 13, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  h1: { fontSize: 22, fontWeight: '700', color: colors.ink, letterSpacing: -0.5 },
-  h2: { fontSize: 16, fontWeight: '700', color: colors.ink, marginBottom: 12 },
-  banner: { marginHorizontal: 16, marginTop: 16, borderRadius: 22, padding: 20 },
-  bannerTitle: { marginTop: 8, fontSize: 20, fontWeight: '800', color: '#fff', lineHeight: 23 },
-  bannerSub: { marginTop: 8, fontSize: 12.5, color: '#fff', opacity: 0.94, maxWidth: 240 },
-  locateBtn: { marginTop: 14, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 13, height: 46, paddingHorizontal: 20 },
-  card: { borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, borderRadius: 18, padding: 13 },
-  avatar: { width: 46, height: 46, borderRadius: 13, backgroundColor: colors.slate, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: colors.ground, fontWeight: '700', fontSize: 16 },
-  etaPill: { backgroundColor: colors.forestTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
-  requestBtn: { flex: 1, backgroundColor: colors.forest, borderRadius: 12, height: 42, alignItems: 'center', justifyContent: 'center' },
-  callBtn: { width: 44, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-});

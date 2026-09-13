@@ -1,104 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../../lib/theme';
-import { Icon, IconName } from '../../lib/icons';
-import { OutlineButton } from '../../components/ui';
-import { useToast } from '../../components/toast';
-import { supabase, signOut } from '../../lib/supabase';
+import { useTheme } from '../../lib/theme-context';
 import { useAuth } from '../../lib/auth';
+import { useToast } from '../../components/toast';
+import { Card, Avatar, Badge, Button, Separator, radius, shadows } from '../../components/ui';
+import { Icon, IconName } from '../../lib/icons';
+import { signOut } from '../../lib/supabase';
 
-const MENU: { t: string; d: string; icon: IconName }[] = [
-  { t: 'My vehicles', d: 'Toyota Vitz 2014 · +1 more', icon: 'car' },
-  { t: 'Booking history', d: 'View past reservations', icon: 'clock' },
-  { t: 'Saved garages', d: '6 saved', icon: 'heart' },
-  { t: 'Payment methods', d: 'Telebirr · CBE Birr', icon: 'wallet' },
-  { t: 'Help & support', d: 'FAQ, chat, call center', icon: 'help' },
-  { t: 'Settings', d: 'Language, notifications', icon: 'gear' },
-];
+type Row = { icon: IconName; label: string; sub?: string; onPress: () => void; danger?: boolean };
 
 export default function Profile() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const toast = useToast();
+  const { colors } = useTheme();
   const { profile, session } = useAuth();
-  const [bookingCount, setBookingCount] = useState(0);
+  const toast = useToast();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    if (!session) return;
-    supabase.from('bookings').select('id', { count: 'exact', head: true })
-      .then(({ count }) => setBookingCount(count ?? 0));
-  }, [session]);
+  const name = profile?.full_name || 'Dawit Mekonnen';
+  const email = session?.user?.email || profile?.phone || '+251 91 •• •• 42';
 
-  const name = profile?.full_name || 'Garage Go user';
-  const initial = name[0]?.toUpperCase() ?? 'G';
+  const sections: { header: string; rows: Row[] }[] = [
+    {
+      header: 'Account', rows: [
+        { icon: 'clock', label: 'Booking history', sub: '24 reservations', onPress: () => router.push('/bookings') },
+        { icon: 'heart', label: 'Saved garages', sub: '6 saved', onPress: () => toast.info('Coming soon') },
+        { icon: 'car', label: 'My vehicles', sub: 'Toyota Vitz 2014 · +1', onPress: () => toast.info('Coming soon') },
+        { icon: 'wallet', label: 'Payment methods', sub: 'Telebirr · CBE Birr', onPress: () => toast.info('Coming soon') },
+      ],
+    },
+    {
+      header: 'Preferences', rows: [
+        { icon: 'bell', label: 'Notifications', onPress: () => router.push('/notifications') },
+        { icon: 'gear', label: 'Settings', sub: 'Appearance, language', onPress: () => router.push('/settings') },
+      ],
+    },
+    {
+      header: 'Support', rows: [
+        { icon: 'help', label: 'Help & support', onPress: () => toast.info('Coming soon') },
+        { icon: 'info', label: 'About', sub: 'Garage Go v1.0.0', onPress: () => toast.info('Garage Go v1.0.0') },
+      ],
+    },
+  ];
 
-  async function handleSignOut() {
+  async function doSignOut() {
     await signOut();
     router.replace('/welcome');
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 24 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+      {/* Header */}
       <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.sub}>{profile?.phone || '+251 •• •• •• ••'} · {profile?.city || 'Addis Ababa'}</Text>
+        <Avatar name={name} size="xl" ring />
+        <Text style={{ fontSize: 22, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 12 }}>{name}</Text>
+        <Text style={{ fontSize: 13, color: colors.muted, marginTop: 3 }}>{email}</Text>
+        <Pressable onPress={() => toast.info('Coming soon')} style={{ marginTop: 8 }}>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.accent }}>Edit profile</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.pointsCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View>
-            <Text style={{ fontSize: 11.5, color: '#EDE9E3' }}>Garage Go points</Text>
-            <Text style={styles.points}>{profile?.points ?? 0}</Text>
+      {/* Stats */}
+      <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+        <Card>
+          <View style={{ flexDirection: 'row', paddingVertical: 16 }}>
+            {[['24', 'Bookings'], ['6', 'Saved'], ['4.9', 'Rating']].map(([v, k], i) => (
+              <View key={k} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i === 0 ? 0 : 1, borderLeftColor: colors.line }}>
+                <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>{v}</Text>
+                <Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>{k}</Text>
+              </View>
+            ))}
           </View>
-          <Pressable accessibilityRole="button" onPress={() => toast('Rewards coming soon')} style={styles.rewardBtn}>
-            <Text style={{ color: colors.ground, fontSize: 11.5, fontWeight: '600' }}>View rewards</Text>
-          </Pressable>
-        </View>
-        <View style={{ marginTop: 14, flexDirection: 'row', gap: 18 }}>
-          {[[String(bookingCount), 'Bookings'], ['6', 'Saved'], ['4.9', 'Rating']].map(([v, k]) => (
-            <View key={k}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>{v}</Text>
-              <Text style={{ marginTop: 1, fontSize: 10.5, color: '#EDE9E3' }}>{k}</Text>
+        </Card>
+      </View>
+
+      {/* Points card (dark both themes) */}
+      <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
+        <View style={{ backgroundColor: colors.espresso, borderRadius: radius.xl, padding: 18, ...shadows.md }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <View>
+              <Text style={{ fontSize: 11.5, color: colors.onEspressoMuted }}>Garage Go points</Text>
+              <Text style={{ fontSize: 34, fontWeight: '800', color: colors.onEspresso, marginTop: 2 }}>{profile?.points ?? 640}</Text>
             </View>
-          ))}
+            <Badge label="Gold member" variant="warning" icon="sparkle" />
+          </View>
+          <Text style={{ fontSize: 11, color: colors.onEspressoMuted, marginTop: 12 }}>250 pts to Platinum</Text>
         </View>
       </View>
 
-      <View style={styles.menu}>
-        {MENU.map((m, i) => (
-          <Pressable key={m.t} accessibilityRole="button" accessibilityLabel={m.t}
-            onPress={() => m.t === 'Booking history' ? router.push('/(tabs)/search') : toast(m.t)}
-            style={[styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: '#E6E4E0' }]}>
-            <View style={styles.rowIcon}><Icon name={m.icon} size={18} color={colors.ink2} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13.5, fontWeight: '600', color: colors.ink }}>{m.t}</Text>
-              <Text style={{ fontSize: 11.5, color: colors.muted }}>{m.d}</Text>
-            </View>
-            <Icon name="chevR" size={16} color="#DEDBD7" />
-          </Pressable>
-        ))}
-      </View>
+      {/* Menu sections */}
+      {sections.map((sec) => (
+        <View key={sec.header} style={{ paddingHorizontal: 16, marginTop: 20 }}>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.muted, letterSpacing: 0.5, marginBottom: 8, textTransform: 'uppercase' }}>{sec.header}</Text>
+          <Card>
+            {sec.rows.map((r, i) => (
+              <View key={r.label}>
+                {i > 0 && <Separator />}
+                <Pressable onPress={r.onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 15, height: 54 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={r.icon} size={18} color={colors.ink2} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '500', color: colors.ink }}>{r.label}</Text>
+                    {r.sub && <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 1 }}>{r.sub}</Text>}
+                  </View>
+                  <Icon name="chevR" size={16} color={colors.faint} />
+                </Pressable>
+              </View>
+            ))}
+          </Card>
+        </View>
+      ))}
 
-      <View style={{ padding: 16 }}>
-        <OutlineButton label="Sign out" color={colors.terraD} onPress={handleSignOut} />
+      <View style={{ paddingHorizontal: 16, marginTop: 22 }}>
+        <Button label="Sign out" icon="logout" variant="ghost" onPress={doSignOut} style={{ borderWidth: 1, borderColor: colors.line }} />
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  avatar: { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: colors.ground, fontWeight: '700', fontSize: 28 },
-  name: { marginTop: 12, fontSize: 21, fontWeight: '700', color: colors.ink },
-  sub: { marginTop: 3, fontSize: 12.5, color: colors.muted },
-  pointsCard: { marginHorizontal: 16, marginTop: 18, backgroundColor: colors.surface, borderRadius: 22, padding: 18 },
-  points: { fontSize: 34, fontWeight: '800', color: colors.terra, lineHeight: 36 },
-  rewardBtn: { borderWidth: 1, borderColor: 'rgba(253,253,251,0.24)', backgroundColor: 'rgba(253,253,251,0.08)', borderRadius: 11, height: 36, paddingHorizontal: 13, alignItems: 'center', justifyContent: 'center' },
-  menu: { marginHorizontal: 16, marginTop: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 20, overflow: 'hidden' },
-  row: { paddingHorizontal: 15, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' },
-});

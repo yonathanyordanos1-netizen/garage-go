@@ -5,11 +5,7 @@
     "version": "1.0.0",
     "scheme": "garagego",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "backgroundColor": "#3A2A1D",
-      "resizeMode": "contain"
-    },
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.garagego.app"
@@ -17,7 +13,7 @@
     "android": {
       "package": "com.garagego.app",
       "adaptiveIcon": {
-        "backgroundColor": "#3A2A1D"
+        "backgroundColor": "#5C3A21"
       }
     },
     "plugins": ["expo-router"],

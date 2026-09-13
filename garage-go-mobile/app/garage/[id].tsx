@@ -1,274 +1,215 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, Pressable, StyleSheet, ScrollView, TextInput, Modal, ActivityIndicator,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../../lib/theme';
-import { Icon } from '../../lib/icons';
-import { GarageThumb, Tag } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../lib/auth';
+import { useTheme } from '../../lib/theme-context';
 import { useToast } from '../../components/toast';
-import { mockPayWithTelebirr, TELEBIRR_NUMBERS } from '../../lib/utils';
+import { useAuth } from '../../lib/auth';
+import { Badge, Button, StepIndicator, IconButton, Separator, radius } from '../../components/ui';
+import { Sheet } from '../../components/sheet';
+import { Thumb } from '../../components/thumb';
+import { Icon } from '../../lib/icons';
+import { garages, services, timeSlots, primaryVehicle } from '../../lib/data';
+import { generateBookingId, mockPayWithTelebirr, TELEBIRR_NUMBERS } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
+import * as haptics from '../../lib/haptics';
 
-type Garage = { id: string; name: string; area: string; rating: number; reviews_count: number; hours: string; tags: string[] };
-type Service = { id: string; name: string; description: string | null; price: number; duration: string | null };
+function nextDays(n: number) {
+  const out: { label: string; date: number; today: boolean; key: string }[] = [];
+  const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const now = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i);
+    out.push({ label: wd[d.getDay()], date: d.getDate(), today: i === 0, key: d.toISOString().slice(0, 10) });
+  }
+  return out;
+}
 
-const DAYS = [['Mon', '15'], ['Tue', '16'], ['Wed', '17'], ['Thu', '18'], ['Fri', '19'], ['Sat', '20']];
-const SLOTS = ['08:30', '10:00', '11:30', '14:00', '15:30', '17:00'];
-
-export default function GarageProfile() {
+export default function GarageDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const toast = useToast();
   const { session } = useAuth();
+  const insets = useSafeAreaInsets();
 
-  const [garage, setGarage] = useState<Garage | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [service, setService] = useState(1);
-  const [day, setDay] = useState(2);
-  const [slot, setSlot] = useState(1);
-  const [vehicle, setVehicle] = useState('Toyota Vitz 2014 · AA-3-12345');
-  const [problem, setProblem] = useState('');
-  const [sheet, setSheet] = useState(false);
+  const g = garages.find((x) => x.id === id) ?? garages[0];
+  const days = nextDays(14);
+
+  const [svc, setSvc] = useState(0);
+  const [day, setDay] = useState(0);
+  const [slot, setSlot] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const [paying, setPaying] = useState(false);
 
-  useEffect(() => {
-    if (!id) return;
-    supabase.from('garages').select('*').eq('id', id).single().then(({ data }) => setGarage(data as Garage));
-    supabase.from('services').select('*').eq('garage_id', id).order('price').then(({ data }) => setServices((data as Service[]) ?? []));
-  }, [id]);
+  const step = slot != null ? 2 : 1;
 
-  async function pay(index: number) {
-    const tb = TELEBIRR_NUMBERS[index];
+  async function confirmPay() {
     setPaying(true);
-    // 1) Mock the Telebirr charge (resolves after ~1s).
-    const result = await mockPayWithTelebirr(tb.number, tb.owner, 100);
-    // 2) Persist a real booking row.
-    const { data: booking, error: bErr } = await supabase
-      .from('bookings')
-      .insert({
-        user_id: session!.user.id,
-        garage_id: id,
-        service_id: services[service]?.id ?? null,
-        booking_date: new Date().toISOString().slice(0, 10),
-        slot: SLOTS[slot],
-        vehicle,
-        problem,
-        status: 'confirmed',
-      })
-      .select()
-      .single();
-
-    if (bErr || !booking) {
-      setPaying(false);
-      return toast(bErr?.message ?? 'Could not save booking');
-    }
-
-    // 3) Persist the payment row (50/50 split lives on the booking).
-    await supabase.from('payments').insert({
-      booking_id: booking.id,
-      user_id: session!.user.id,
-      method: 'telebirr',
-      telebirr_number: tb.number,
-      telebirr_owner: tb.owner,
-      amount: 100,
-      status: 'success',
-    });
-
+    haptics.tap();
+    const chosen = TELEBIRR_NUMBERS[0];
+    await mockPayWithTelebirr(chosen.number, chosen.owner, 100);
+    const code = generateBookingId();
+    // Best-effort write to Supabase (won't block the UX if the table/policy differs).
+    try {
+      if (session?.user) {
+        const { data: b } = await supabase.from('bookings').insert({
+          user_id: session.user.id, garage_name: g.name, service: services[svc].n,
+          slot: `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`,
+          fee: 100, platform_share: 50, garage_share: 50, code, status: 'confirmed',
+        }).select().single();
+        if (b?.id) {
+          await supabase.from('payments').insert({ booking_id: b.id, user_id: session.user.id, method: 'telebirr', amount: 100, status: 'success', number: chosen.number });
+        }
+      }
+    } catch {}
     setPaying(false);
-    setSheet(false);
-    toast('Reservation confirmed!');
-    router.push({
+    setPayOpen(false);
+    haptics.success();
+    toast.success('Reservation confirmed!');
+    router.replace({
       pathname: '/confirmation',
-      params: {
-        code: booking.booking_code,
-        garage: garage?.name ?? '',
-        service: services[service]?.name ?? '',
-        slot: SLOTS[slot],
-        vehicle,
-        telebirr: tb.number,
-        ref: result.reference,
-      },
+      params: { code, garage: g.name, service: services[svc].n, slot: `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`, number: chosen.number },
     });
-  }
-
-  if (!garage) {
-    return <View style={{ flex: 1, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.forest} /></View>;
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ground }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
-        <View style={{ height: 210 }}>
-          <GarageThumb width="100%" height={210} seed={0} />
-          <View style={[styles.topBar, { top: insets.top + 8 }]}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={styles.circleBtn}>
-              <Icon name="chevL" size={18} color={colors.ink2} />
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Save garage" onPress={() => toast('Saved to your garages')} style={styles.circleBtn}>
-              <Icon name="heart" size={18} color={colors.terra} />
-            </Pressable>
+      <ScrollView contentContainerStyle={{ paddingBottom: 130 }} showsVerticalScrollIndicator={false}>
+        <View style={{ height: 220 }}>
+          <Thumb width="100%" height={220} seed={0} icon="garage" />
+          <View style={{ position: 'absolute', top: insets.top + 8, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <IconButton icon="chevL" onPress={() => router.back()} />
+            <IconButton icon="heart" tint={saved ? colors.error : colors.ink2} onPress={() => { haptics.select(); setSaved((s) => !s); }} />
           </View>
         </View>
 
-        <View style={styles.sheetTop}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+        <View style={{ backgroundColor: colors.ground, borderTopLeftRadius: 26, borderTopRightRadius: 26, marginTop: -26, padding: 16 }}>
+          <StepIndicator steps={['Service', 'Schedule', 'Confirm']} current={step} />
+
+          <View style={{ flexDirection: 'row', marginTop: 20 }}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.h1}>{garage.name}</Text>
+                <Text style={{ fontSize: 21, fontWeight: '700', color: colors.ink }}>{g.name}</Text>
                 <Icon name="shield" size={16} color={colors.forest} strokeWidth={2} />
               </View>
-              <Text style={{ marginTop: 5, fontSize: 12, color: colors.muted }}>{garage.area} · {garage.hours}</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 5 }}>{g.area} · {g.dist} · {g.hours}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Icon name="star" size={14} color={colors.terra} />
-                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{garage.rating}</Text>
+                <Icon name="star" size={14} color="#C29B74" />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{g.rating}</Text>
               </View>
-              <Text style={{ fontSize: 11, color: colors.faint }}>{garage.reviews_count} reviews</Text>
+              <Text style={{ fontSize: 11, color: colors.faint }}>{g.reviews} reviews</Text>
             </View>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }} contentContainerStyle={{ gap: 7 }}>
-            {(garage.tags ?? []).concat(['Warranty']).map((t) => <Tag key={t} label={t} />)}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, marginTop: 12 }}>
+            {g.tags.concat(['AC', 'Warranty']).map((t) => <Badge key={t} label={t} variant="secondary" />)}
           </ScrollView>
 
-          {/* Service */}
-          <Text style={styles.h2}>Choose a service</Text>
+          {/* Service selection */}
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Choose a service</Text>
           <View style={{ gap: 9 }}>
             {services.map((s, i) => {
-              const on = service === i;
+              const on = svc === i;
               return (
-                <Pressable key={s.id} onPress={() => setService(i)} style={[styles.serviceRow, { borderColor: on ? colors.forest : colors.line, backgroundColor: on ? colors.forestTint2 : colors.card }]}>
-                  <View style={[styles.radio, { borderColor: on ? colors.forest : '#DEDBD7', backgroundColor: on ? colors.forest : colors.card }]}>
-                    {on ? <Icon name="check" size={12} color="#fff" strokeWidth={3} /> : null}
+                <Pressable key={s.n} onPress={() => { haptics.select(); setSvc(i); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: on ? colors.forest : colors.line, backgroundColor: on ? colors.forestTint : colors.card }}>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: on ? colors.forest : colors.line2, alignItems: 'center', justifyContent: 'center' }}>
+                    {on && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.forest }} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}>{s.name}</Text>
-                    {s.duration ? <Text style={{ fontSize: 11, color: colors.muted }}>{s.duration}{s.description ? ' · ' + s.description : ''}</Text> : null}
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}>{s.n}</Text>
+                    <Text style={{ fontSize: 11, color: colors.muted }}>{s.d}</Text>
                   </View>
-                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ink }}>{s.price} ETB</Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ink }}>{s.p} ETB</Text>
                 </Pressable>
               );
             })}
           </View>
 
           {/* Date */}
-          <Text style={styles.h2}>Pick a date</Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Pick a date</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {DAYS.map(([d, n], i) => {
+            {days.map((d, i) => {
               const on = day === i;
               return (
-                <Pressable key={n} onPress={() => setDay(i)} style={[styles.day, { borderColor: on ? colors.ink : colors.line2, backgroundColor: on ? colors.ink : colors.card }]}>
-                  <Text style={{ fontSize: 10.5, color: on ? '#C9C2B4' : colors.faint }}>{d}</Text>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: on ? '#fff' : colors.ink }}>{n}</Text>
+                <Pressable key={d.key} onPress={() => { haptics.select(); setDay(i); }} style={{ width: 56, height: 68, borderRadius: radius.md, borderWidth: 1, borderColor: on ? colors.forest : colors.line2, backgroundColor: on ? colors.forest : colors.card, alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                  <Text style={{ fontSize: 10.5, color: on ? colors.onPrimary : colors.muted }}>{d.label}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: on ? colors.onPrimary : colors.ink }}>{d.date}</Text>
+                  {d.today && <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: on ? colors.onPrimary : colors.accent }} />}
                 </Pressable>
               );
             })}
           </ScrollView>
 
-          {/* Slot */}
-          <Text style={styles.h2}>Time slot</Text>
-          <View style={styles.slotGrid}>
-            {SLOTS.map((t, i) => {
+          {/* Time */}
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Time slot</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {timeSlots.map((t, i) => {
               const off = i === 3;
               const on = slot === i && !off;
               return (
-                <Pressable key={t} disabled={off} onPress={() => setSlot(i)}
-                  style={[styles.slot, { borderColor: on ? colors.forest : colors.line2, backgroundColor: on ? colors.forestTint : off ? '#F1EDE7' : colors.card }]}>
-                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: on ? colors.ink : off ? '#ABA49E' : colors.ink2 }}>{t}</Text>
+                <Pressable key={t} disabled={off} onPress={() => { haptics.select(); setSlot(i); }} style={{ width: '31.5%', height: 44, borderRadius: radius.sm, borderWidth: 1, borderColor: on ? colors.forest : colors.line2, backgroundColor: on ? colors.forestTint : off ? colors.surface : colors.card, alignItems: 'center', justifyContent: 'center', opacity: off ? 0.5 : 1 }}>
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: on ? colors.forest : off ? colors.faint : colors.ink2, textDecorationLine: off ? 'line-through' : 'none' }}>{t}</Text>
                 </Pressable>
               );
             })}
           </View>
 
-          {/* Vehicle + problem */}
-          <Text style={styles.h2}>Vehicle & problem</Text>
-          <View style={{ gap: 10 }}>
-            <View style={styles.inputWrap}>
-              <Icon name="car" size={18} color={colors.faint} />
-              <TextInput value={vehicle} onChangeText={setVehicle} accessibilityLabel="Vehicle" style={{ flex: 1, fontSize: 13.5, color: colors.ink, padding: 0 }} />
+          {/* Vehicle */}
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Vehicle</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card }}>
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="car" size={20} color={colors.ink2} />
             </View>
-            <TextInput value={problem} onChangeText={setProblem} placeholder="Describe the problem (optional)" placeholderTextColor={colors.faint}
-              accessibilityLabel="Describe the problem" multiline style={styles.textarea} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.ink }}>{primaryVehicle.make} {primaryVehicle.model} {primaryVehicle.year}</Text>
+              <Text style={{ fontSize: 11.5, color: colors.muted }}>{primaryVehicle.plate}</Text>
+            </View>
+            <Badge label="Primary" variant="secondary" />
           </View>
         </View>
       </ScrollView>
 
-      {/* Sticky pay bar */}
-      <View style={[styles.payBar, { paddingBottom: insets.bottom + 14 }]}>
+      {/* Sticky bar */}
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 13, paddingBottom: insets.bottom + 14, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.line }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>Reservation fee</Text>
           <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>100 ETB</Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Pay 100 ETB reservation fee" onPress={() => setSheet(true)} style={styles.payBtn}>
-          <Text style={{ color: colors.ink, fontSize: 14.5, fontWeight: '700' }}>Pay 100 ETB</Text>
-        </Pressable>
+        <View style={{ flex: 1.4 }}>
+          <Button label={slot == null ? 'Pick a time' : 'Continue'} disabled={slot == null} iconRight="arrowR" onPress={() => setPayOpen(true)} />
+        </View>
       </View>
 
-      {/* Telebirr pay sheet */}
-      <Modal visible={sheet} transparent animationType="slide" onRequestClose={() => !paying && setSheet(false)}>
-        <Pressable style={styles.backdrop} onPress={() => !paying && setSheet(false)} />
-        <View style={[styles.paySheet, { paddingBottom: insets.bottom + 24 }]}>
-          <View style={styles.grabber} />
-          {paying ? (
-            <View style={{ alignItems: 'center', paddingVertical: 26, gap: 14 }}>
-              <ActivityIndicator size="large" color={colors.terra} />
-              <Text style={{ color: colors.muted, fontSize: 13 }}>Confirming with Telebirr…</Text>
-            </View>
-          ) : (
-            <>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={styles.tbLogo}><Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13 }}>T</Text></View>
-                <View>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Pay with Telebirr</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted }}>100 ETB reservation fee</Text>
-                </View>
-              </View>
-              <View style={{ marginTop: 14, gap: 10 }}>
-                {TELEBIRR_NUMBERS.map((t, i) => (
-                  <Pressable key={t.number} accessibilityRole="button" accessibilityLabel={`Pay with Telebirr ${t.number}`} onPress={() => pay(i)} style={styles.tbRow}>
-                    <View style={styles.tbIcon}><Icon name="phone" size={18} color={colors.terraD} strokeWidth={2} /></View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.ink }}>{t.number}</Text>
-                      <Text style={{ fontSize: 11.5, color: colors.muted }}>{t.owner} · {t.label}</Text>
-                    </View>
-                    <Icon name="chevR" size={16} color={colors.forest} />
-                  </Pressable>
-                ))}
-              </View>
-              <Text style={styles.mockNote}>Mock payment — no real transaction is made.</Text>
-            </>
-          )}
+      {/* Payment sheet */}
+      <Sheet open={payOpen} onClose={() => setPayOpen(false)} snapPoints={['62%']} title="Complete payment" description="Pay via Telebirr to confirm your booking">
+        <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+          <Text style={{ fontSize: 32, fontWeight: '800', color: colors.ink }}>100 ETB</Text>
+          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>Reservation fee · 50 platform / 50 garage</Text>
         </View>
-      </Modal>
+        <Separator style={{ marginVertical: 16 }} />
+        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.ink2, marginBottom: 10 }}>Pay to</Text>
+        <View style={{ gap: 8 }}>
+          {TELEBIRR_NUMBERS.map((t) => (
+            <View key={t.number} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card }}>
+              <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: colors.forestTint, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="phone" size={18} color={colors.forest} strokeWidth={2} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.ink }}>{t.number}</Text>
+                <Text style={{ fontSize: 11.5, color: colors.muted }}>{t.owner} · {t.label}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <Button label={paying ? 'Processing…' : 'Confirm & pay'} loading={paying} onPress={confirmPay} />
+        </View>
+        <Text style={{ fontSize: 11, color: colors.faint, textAlign: 'center', marginTop: 12 }}>Mock payment — no real transaction is made.</Text>
+      </Sheet>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  topBar: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },
-  circleBtn: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  sheetTop: { marginTop: -26, backgroundColor: colors.ground, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 16, paddingTop: 20 },
-  h1: { fontSize: 21, fontWeight: '700', color: colors.ink },
-  h2: { marginTop: 20, marginBottom: 10, fontSize: 15, fontWeight: '700', color: colors.ink },
-  serviceRow: { borderWidth: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 11 },
-  radio: { width: 20, height: 20, borderRadius: 999, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  day: { width: 52, height: 60, borderWidth: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  slot: { width: '31%', flexGrow: 1, height: 40, borderWidth: 1, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 13, paddingHorizontal: 13, height: 48 },
-  textarea: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, padding: 11, minHeight: 60, fontSize: 13, color: colors.ink, backgroundColor: colors.card, textAlignVertical: 'top' },
-  payBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.ground, borderTopWidth: 1, borderTopColor: colors.line, paddingHorizontal: 16, paddingTop: 13, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  payBtn: { backgroundColor: colors.forest, borderRadius: 14, height: 52, paddingHorizontal: 26, alignItems: 'center', justifyContent: 'center' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(30,26,20,0.5)' },
-  paySheet: { backgroundColor: colors.ground, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 18 },
-  grabber: { width: 40, height: 5, borderRadius: 999, backgroundColor: '#DEDBD7', alignSelf: 'center', marginBottom: 14 },
-  tbLogo: { width: 42, height: 42, borderRadius: 12, backgroundColor: colors.terra, alignItems: 'center', justifyContent: 'center' },
-  tbRow: { borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, borderRadius: 15, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  tbIcon: { width: 40, height: 40, borderRadius: 11, backgroundColor: colors.terraTint, alignItems: 'center', justifyContent: 'center' },
-  mockNote: { marginTop: 14, textAlign: 'center', fontSize: 11, color: colors.faint },
-});

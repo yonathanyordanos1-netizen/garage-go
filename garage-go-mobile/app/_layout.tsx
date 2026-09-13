@@ -1,28 +1,46 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { AuthProvider } from '../lib/auth';
 import { ToastProvider } from '../components/toast';
-import { colors } from '../lib/theme';
+import { ThemeProvider, useTheme } from '../lib/theme-context';
+
+function Root() {
+  const { colors, mode } = useTheme();
+  return (
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.ground },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="index" options={{ animation: 'none' }} />
+      </Stack>
+    </>
+  );
+}
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.ground },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
-          </Stack>
-        </ToastProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <BottomSheetModalProvider>
+              <ToastProvider>
+                <Root />
+              </ToastProvider>
+            </BottomSheetModalProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

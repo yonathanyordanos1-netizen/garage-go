@@ -1,129 +1,115 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
-import { Icon } from '../lib/icons';
-import { Field, PasswordField, PhoneField, PrimaryButton } from '../components/ui';
-import { SocialAuth } from '../components/social';
+import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
+import { Button, Field, OtpInput, SegmentedControl, Separator, IconButton } from '../components/ui';
+import { Icon } from '../lib/icons';
 import { signInWithPassword, signInWithOtp, verifyOtp } from '../lib/supabase';
+import * as haptics from '../lib/haptics';
 
 export default function SignIn() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const toast = useToast();
-  const [tab, setTab] = useState(0); // 0 email, 1 phone
+  const insets = useSafeAreaInsets();
+
+  const [tab, setTab] = useState(0); // 0 = Email, 1 = Phone
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  async function handleEmail() {
-    if (!email || !password) return toast('Enter your email and password');
-    setLoading(true);
+  const fullPhone = () => '+251' + phone.replace(/[^0-9]/g, '');
+
+  async function emailSignIn() {
+    if (!email || !password) return toast.error('Enter your email and password');
+    setBusy(true);
     const { error } = await signInWithPassword(email.trim(), password);
-    setLoading(false);
-    if (error) return toast(error.message);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    haptics.success();
     router.replace('/(tabs)');
   }
-
-  async function handleSendOtp() {
-    const full = '+251' + phone.replace(/\D/g, '').replace(/^0/, '');
-    setLoading(true);
-    const { error } = await signInWithOtp(full);
-    setLoading(false);
-    if (error) return toast(error.message);
+  async function sendCode() {
+    if (phone.replace(/[^0-9]/g, '').length < 9) return toast.error('Enter a valid phone number');
+    setBusy(true);
+    const { error } = await signInWithOtp(fullPhone());
+    setBusy(false);
+    if (error) return toast.error(error.message);
     setOtpSent(true);
-    toast('Code sent to ' + full);
+    toast.success('Code sent to ' + fullPhone());
   }
-  async function handleVerifyOtp() {
-    const full = '+251' + phone.replace(/\D/g, '').replace(/^0/, '');
-    setLoading(true);
-    const { error } = await verifyOtp(full, otp.trim());
-    setLoading(false);
-    if (error) return toast(error.message);
+  async function verify() {
+    setBusy(true);
+    const { error } = await verifyOtp(fullPhone(), otp);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    haptics.success();
     router.replace('/(tabs)');
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.ground }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 22, paddingBottom: insets.bottom + 30 }}
-      keyboardShouldPersistTaps="handled">
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={styles.back}>
-        <Icon name="chevL" size={18} color={colors.ink2} />
-      </Pressable>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.ground }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: 24 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <IconButton icon="chevL" onPress={() => router.back()} label="Back" />
 
-      <View style={{ marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 11 }}>
-        <View style={styles.logo}><Icon name="wrench" size={22} color={colors.ground} strokeWidth={2} /></View>
-        <View>
-          <Text style={styles.h1}>Sign in</Text>
-          <Text style={styles.subtle}>Welcome back to Garage Go</Text>
-        </View>
+      <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center', marginTop: 22 }}>
+        <Icon name="wrench" size={26} color={colors.onPrimary} strokeWidth={2} />
+      </View>
+      <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 16 }}>Welcome back</Text>
+      <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>Sign in to your Garage Go account</Text>
+
+      <View style={{ marginTop: 24 }}>
+        <SegmentedControl options={['Email', 'Phone OTP']} index={tab} onChange={(i) => { setTab(i); setOtpSent(false); }} />
       </View>
 
-      <View style={styles.tabs}>
-        {['Email & password', 'Phone OTP'].map((t, i) => (
-          <Pressable key={t} accessibilityRole="button" accessibilityLabel={`Sign in with ${t}`} onPress={() => setTab(i)}
-            style={[styles.tab, tab === i && styles.tabOn]}>
-            <Text style={{ fontSize: 12.5, fontWeight: '600', color: tab === i ? colors.ink : colors.muted }}>{t}</Text>
+      {tab === 0 ? (
+        <View style={{ marginTop: 20, gap: 14 }}>
+          <Field label="Email" icon="mail" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+          <Field label="Password" icon="lock" placeholder="••••••••" value={password} onChangeText={setPassword} secure />
+          <Button label="Sign in" iconRight="arrowR" onPress={emailSignIn} loading={busy} />
+          <Pressable onPress={() => toast.info('Password reset coming soon')} style={{ alignSelf: 'center' }}>
+            <Text style={{ fontSize: 12.5, fontWeight: '600', color: colors.accent }}>Forgot password?</Text>
           </Pressable>
-        ))}
+        </View>
+      ) : (
+        <View style={{ marginTop: 20, gap: 14 }}>
+          {!otpSent ? (
+            <>
+              <Field label="Phone number" icon="phone" prefix="+251" placeholder="9•• •• •• ••" value={phone} onChangeText={setPhone} keyboardType="number-pad" description="We'll text you a one-time code to verify it's you." />
+              <Button label="Send code" onPress={sendCode} loading={busy} />
+            </>
+          ) : (
+            <>
+              <Text style={{ fontSize: 12.5, fontWeight: '600', color: colors.ink2 }}>Verification code</Text>
+              <OtpInput value={otp} onChange={setOtp} />
+              <Text style={{ fontSize: 12, color: colors.muted }}>
+                Sent to <Text style={{ color: colors.ink, fontWeight: '600' }}>{fullPhone()}</Text>.{' '}
+                <Text onPress={sendCode} style={{ color: colors.accent, fontWeight: '700' }}>Resend</Text>
+              </Text>
+              <Button label="Verify & sign in" iconRight="arrowR" onPress={verify} loading={busy} disabled={otp.length < 6} />
+            </>
+          )}
+        </View>
+      )}
+
+      <Separator label="or continue with" style={{ marginTop: 24 }} />
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+        <View style={{ flex: 1 }}><Button label="Google" variant="outline" onPress={() => toast.info('Google sign-in coming soon')} /></View>
+        <View style={{ flex: 1 }}><Button label="Apple" icon="apple" variant="outline" onPress={() => toast.info('Apple sign-in coming soon')} /></View>
       </View>
 
-      <View style={{ marginTop: 18, gap: 12 }}>
-        {tab === 0 ? (
-          <>
-            <Field label="Email" icon="mail" accessibilityLabel="Sign in with email" placeholder="dawit@email.com"
-              autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-            <PasswordField label="Password" accessibilityLabel="Password input" placeholder="••••••••" value={password} onChangeText={setPassword} />
-          </>
-        ) : (
-          <>
-            <View style={{ gap: 6 }}>
-              <Text style={styles.fieldLabel}>Phone number</Text>
-              <PhoneField value={phone} onChangeText={setPhone} accessibilityLabel="Sign in with phone" />
-            </View>
-            {otpSent && (
-              <Field label="6-digit code" icon="lock" accessibilityLabel="OTP code" placeholder="••••••"
-                keyboardType="number-pad" value={otp} onChangeText={setOtp} />
-            )}
-            <Text style={styles.subtle}>We'll text you a 6-digit code to sign in.</Text>
-          </>
-        )}
-      </View>
-
-      <View style={{ marginTop: 18 }}>
-        {tab === 0 ? (
-          <PrimaryButton label="Sign in" onPress={handleEmail} loading={loading} />
-        ) : otpSent ? (
-          <PrimaryButton label="Verify & sign in" onPress={handleVerifyOtp} loading={loading} />
-        ) : (
-          <PrimaryButton label="Send code" onPress={handleSendOtp} loading={loading} />
-        )}
-      </View>
-
-      <SocialAuth onGoogle={() => toast('Enable Google in Supabase Auth to use this')} onApple={() => toast('Enable Apple in Supabase Auth to use this')} />
-
-      <Text style={styles.footer}>
-        New to Garage Go?{' '}
-        <Text style={styles.link} onPress={() => router.replace('/sign-up')}>Create an account</Text>
+      <Text style={{ textAlign: 'center', fontSize: 13, color: colors.muted, marginTop: 24 }}>
+        Don't have an account?{' '}
+        <Text onPress={() => router.push('/sign-up')} style={{ fontWeight: '700', color: colors.ink }}>Sign up</Text>
       </Text>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  back: { width: 40, height: 40, borderRadius: 13, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  h1: { fontSize: 23, fontWeight: '800', color: colors.ink, letterSpacing: -0.4 },
-  subtle: { marginTop: 2, fontSize: 12.5, color: colors.muted },
-  fieldLabel: { fontSize: 11.5, fontWeight: '600', color: colors.ink2 },
-  tabs: { marginTop: 22, flexDirection: 'row', gap: 4, backgroundColor: '#F0ECE5', borderRadius: 13, padding: 4 },
-  tab: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  tabOn: { backgroundColor: colors.card },
-  footer: { marginTop: 22, textAlign: 'center', fontSize: 13, color: colors.muted },
-  link: { fontWeight: '700', color: colors.ink },
-});

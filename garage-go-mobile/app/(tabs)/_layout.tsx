@@ -1,13 +1,15 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../lib/auth';
-import { colors } from '../../lib/theme';
+import { useTheme } from '../../lib/theme-context';
 import { Icon, IconName } from '../../lib/icons';
+import { shadows } from '../../lib/theme';
+import * as haptics from '../../lib/haptics';
 
-// Route → icon + label. Order is preserved: Home · Garages · Market · Profile.
 const TABS: Record<string, { icon: IconName; label: string }> = {
   index: { icon: 'home', label: 'Home' },
   search: { icon: 'garage', label: 'Garages' },
@@ -15,60 +17,76 @@ const TABS: Record<string, { icon: IconName; label: string }> = {
   profile: { icon: 'user', label: 'Profile' },
 };
 
-const INACTIVE = 'rgba(58,42,29,0.55)'; // Raw Umber @ 55%
+function TabButton({ focused, meta, onPress }: { focused: boolean; meta: { icon: IconName; label: string }; onPress: () => void }) {
+  const { colors } = useTheme();
+  const v = useSharedValue(focused ? 1 : 0);
+  useEffect(() => { v.value = focused ? withSpring(1, { damping: 15, stiffness: 400 }) : withTiming(0, { duration: 150 }); }, [focused]);
+  const pill = useAnimatedStyle(() => ({ opacity: v.value, transform: [{ scale: 0.6 + v.value * 0.4 }] }));
+  const tint = focused ? colors.ink : colors.muted;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={meta.label}
+      onPress={onPress}
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 6 }}
+    >
+      <View style={{ width: 48, height: 28, alignItems: 'center', justifyContent: 'center' }}>
+        <Animated.View style={[{ position: 'absolute', width: 48, height: 28, borderRadius: 14, backgroundColor: colors.forestTint }, pill]} />
+        <Icon name={meta.icon} size={22} color={tint} strokeWidth={focused ? 2.2 : 1.9} />
+      </View>
+      <Text style={{ fontSize: 10, fontWeight: focused ? '700' : '600', color: tint }}>{meta.label}</Text>
+    </Pressable>
+  );
+}
 
-function TabBar({ state, navigation }: BottomTabBarProps) {
+type TabBarProps = { state: { index: number; routes: { key: string; name: string }[] }; navigation: any };
+function FloatingTabBar({ state, navigation }: TabBarProps) {
+  const { colors, mode } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-      {state.routes.map((route, i) => {
-        const meta = TABS[route.name];
-        if (!meta) return null;
-        const focused = state.index === i;
-        const tint = focused ? colors.forest : INACTIVE; // sand when active
-
-        const onPress = () => {
-          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
-        };
-
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={meta.label}
-            onPress={onPress}
-            style={styles.tab}
-            hitSlop={8}
-          >
-            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Icon name={meta.icon} size={23} color={tint} strokeWidth={focused ? 2.2 : 1.9} />
-            </View>
-            <Text style={[styles.label, { color: tint, fontWeight: focused ? '700' : '600' }]}>
-              {meta.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+    <View style={{ position: 'absolute', left: 20, right: 20, bottom: insets.bottom + 10 }}>
+      <BlurView
+        intensity={60}
+        tint={mode === 'dark' ? 'systemMaterialDark' : 'systemMaterialLight'}
+        style={{
+          flexDirection: 'row', height: 64, borderRadius: 22, overflow: 'hidden',
+          borderWidth: 1, borderColor: colors.line,
+          backgroundColor: mode === 'dark' ? 'rgba(36,30,24,0.72)' : 'rgba(253,253,251,0.82)',
+          ...shadows.lg,
+        }}
+      >
+        {state.routes.map((route, i) => {
+          const meta = TABS[route.name];
+          if (!meta) return null;
+          const focused = state.index === i;
+          const onPress = () => {
+            haptics.select();
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
+          };
+          return <TabButton key={route.key} focused={focused} meta={meta} onPress={onPress} />;
+        })}
+      </BlurView>
     </View>
   );
 }
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
+  const { colors } = useTheme();
 
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={colors.forest} />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
   if (!session) return <Redirect href="/welcome" />;
 
   return (
-    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
+    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <FloatingTabBar {...props} />}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="search" />
       <Tabs.Screen name="market" />
@@ -76,32 +94,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: colors.ground, // Warm Bone White
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(58,42,29,0.10)', // subtle warm hairline
-    paddingTop: 10,
-    paddingHorizontal: 8,
-    // shadow-lg equivalent, cast upward
-    shadowColor: '#3A2A1D',
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: -3 },
-    elevation: 16,
-  },
-  tab: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 2 },
-  iconWrap: {
-    width: 52,
-    height: 34,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWrapActive: {
-    backgroundColor: 'rgba(194,155,116,0.16)', // Muted Sand wash behind the active icon
-  },
-  label: { fontSize: 11, letterSpacing: 0.1 },
-});
