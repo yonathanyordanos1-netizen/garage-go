@@ -10,7 +10,8 @@ export type IconName =
   | 'star' | 'shield' | 'birr' | 'phone' | 'garage'
   | 'sun' | 'moon' | 'calendar' | 'x' | 'info' | 'alertCircle' | 'checkCircle'
   | 'plus' | 'logout' | 'share' | 'arrowR' | 'sliders' | 'gift' | 'sparkle'
-  | 'edit' | 'trash' | 'map' | 'bookmark';
+  | 'edit' | 'trash' | 'map' | 'bookmark'
+  | 'box' | 'trend' | 'power' | 'list' | 'clipboard';
 
 type Props = { name: IconName; size?: number; color?: string; strokeWidth?: number };
 
@@ -225,6 +226,27 @@ export function Icon({ name, size = 20, color = colors.ink2, strokeWidth = 1.9 }
         </>);
       case 'bookmark':
         return p('M7 4h10v16l-5-3-5 3z');
+      case 'box':
+        return (<>
+          {p('M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z')}
+          {p('M3.5 7.5 12 12l8.5-4.5M12 12v9')}
+        </>);
+      case 'trend':
+        return (<>
+          {p('M4 15l5-5 3 3 6-7')}
+          {p('M15 6h4v4')}
+        </>);
+      case 'power':
+        return (<>
+          {p('M12 4v7')}
+          {p('M7.5 7a7 7 0 1 0 9 0')}
+        </>);
+      case 'list':
+        return p('M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01');
+      case 'clipboard':
+        return (<>
+          {p('M9 4h6v2H9zM8 5H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2')}
+        </>);
       default:
         return null;
     }
