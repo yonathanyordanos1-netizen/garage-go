@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
 import { Button, Field, OtpInput, IconButton } from '../components/ui';
-import { Icon } from '../lib/icons';
 import { otpSend, otpVerify, otpMessage, DEV_OTP } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import * as haptics from '../lib/haptics';
+
+const logo = require('../assets/logo.jpeg');
 
 export default function SignIn() {
   const router = useRouter();
@@ -82,9 +83,7 @@ export default function SignIn() {
     >
       <IconButton icon="chevL" onPress={() => router.back()} label="Back" />
 
-      <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center', marginTop: 22 }}>
-        <Icon name="wrench" size={26} color={colors.onPrimary} strokeWidth={2} />
-      </View>
+      <Image source={logo} style={{ width: 72, height: 72, borderRadius: 18, marginTop: 22 }} resizeMode="contain" />
       <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 16 }}>Welcome back</Text>
       <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>Sign in with your phone number</Text>
 

@@ -11,14 +11,13 @@ import * as haptics from '../lib/haptics';
 
 const logo = require('../assets/logo.jpeg');
 
-export default function SignUp() {
+export default function SignIn() {
   const router = useRouter();
   const { colors } = useTheme();
   const toast = useToast();
-  const { demoSignIn } = useAuth();
+  const { demoSignIn, role } = useAuth();
   const insets = useSafeAreaInsets();
 
-  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -35,12 +34,14 @@ export default function SignUp() {
     setCooldown(seconds);
     if (timer.current) clearInterval(timer.current);
     timer.current = setInterval(() => {
-      setCooldown((s) => { if (s <= 1) { if (timer.current) clearInterval(timer.current); return 0; } return s - 1; });
+      setCooldown((s) => {
+        if (s <= 1) { if (timer.current) clearInterval(timer.current); return 0; }
+        return s - 1;
+      });
     }, 1000);
   }
 
   async function sendCode() {
-    if (!name.trim()) return toast.error('Enter your full name.');
     if (digits.length !== 9) return toast.error('Enter a valid Ethiopian number (+251 then 9 digits).');
     if (DEV_OTP) {
       setOtpSent(true); setOtp(''); startCooldown(60);
@@ -59,12 +60,12 @@ export default function SignUp() {
   async function verify() {
     if (otp.length < 6) return toast.error('Enter the 6-digit code.');
     if (DEV_OTP) {
-      await demoSignIn(fullPhone, name.trim());
+      await demoSignIn({ phone: fullPhone, role });
       haptics.success();
       return router.replace('/(tabs)');
     }
     setVerifying(true);
-    const r = await otpVerify(fullPhone, otp, name.trim());
+    const r = await otpVerify(fullPhone, otp);
     setVerifying(false);
     if (!r.ok) {
       if (r.error === 'expired' || r.error === 'too_many_attempts') setOtp('');
@@ -83,15 +84,14 @@ export default function SignUp() {
       <IconButton icon="chevL" onPress={() => router.back()} label="Back" />
 
       <Image source={logo} style={{ width: 72, height: 72, borderRadius: 18, marginTop: 22 }} resizeMode="contain" />
-      <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 16 }}>Create account</Text>
-      <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>Join Garage Go with your phone number</Text>
+      <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 16 }}>Welcome back</Text>
+      <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>Sign in to your operator account</Text>
 
-      <View style={{ marginTop: 24, gap: 14 }}>
+      <View style={{ marginTop: 26, gap: 14 }}>
         {!otpSent ? (
           <>
-            <Field label="Full name" icon="user" placeholder="Dawit Mekonnen" value={name} onChangeText={setName} />
-            <Field label="Phone number" icon="phone" prefix="+251" placeholder="9•• •• •• ••" value={phone} onChangeText={setPhone} keyboardType="number-pad" description="We'll text you a one-time code to verify your number." />
-            <Button label="Send code" onPress={sendCode} loading={sending} disabled={digits.length !== 9 || !name.trim()} />
+            <Field label="Phone number" icon="phone" prefix="+251" placeholder="9•• •• •• ••" value={phone} onChangeText={setPhone} keyboardType="number-pad" description="We'll text you a one-time code to verify it's you." />
+            <Button label="Send code" onPress={sendCode} loading={sending} disabled={digits.length !== 9} />
           </>
         ) : (
           <>
@@ -109,17 +109,17 @@ export default function SignUp() {
                 </Pressable>
               )}
             </View>
-            <Button label="Create account" iconRight="arrowR" onPress={verify} loading={verifying} disabled={otp.length < 6} />
+            <Button label="Verify & sign in" iconRight="arrowR" onPress={verify} loading={verifying} disabled={otp.length < 6} />
             <Pressable onPress={() => { setOtpSent(false); setOtp(''); }} style={{ alignSelf: 'center' }}>
-              <Text style={{ fontSize: 12.5, color: colors.muted }}>Change details</Text>
+              <Text style={{ fontSize: 12.5, color: colors.muted }}>Change number</Text>
             </Pressable>
           </>
         )}
       </View>
 
       <Text style={{ textAlign: 'center', fontSize: 13, color: colors.muted, marginTop: 28 }}>
-        Already have an account?{' '}
-        <Text onPress={() => router.replace('/sign-in')} style={{ fontWeight: '700', color: colors.ink }}>Sign in</Text>
+        New to Garage Go Owners?{' '}
+        <Text onPress={() => router.push('/sign-up')} style={{ fontWeight: '700', color: colors.ink }}>Create an account</Text>
       </Text>
     </ScrollView>
   );

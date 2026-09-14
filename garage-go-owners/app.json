@@ -13,10 +13,18 @@
     "android": {
       "package": "com.garagego.owners",
       "adaptiveIcon": {
-        "backgroundColor": "#0F2D3A"
+        "backgroundColor": "#5C3A21"
       }
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Garage Go Owners uses the camera to scan customer reservation QR codes."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": false
     }

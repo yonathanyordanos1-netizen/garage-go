@@ -1,11 +1,10 @@
-// Garage Go OWNERS — theme tokens.
+// Garage Go — theme tokens.
 //
-// The customer app wears a warm espresso identity. The Owners app is the
-// operator console — a cooler, more "dashboard" identity (deep teal primary,
-// slate neutrals, a signal-amber accent). Token NAMES are kept identical to the
-// customer app (`forest` = PRIMARY, `accent`, `espresso`, …) so the shared
-// `components/ui.tsx` renders unchanged; only the values differ. Two full
-// palettes — light + dark — driven by lib/theme-context.tsx.
+// Warm identity kept from the approved prototype (Warm Espresso primary, Muted
+// Sand accent, bone/umber neutrals). Two full palettes — light + dark — so the
+// app can follow the phone's system setting or a manual override (see
+// lib/theme-context.tsx). The dark palette is a warm espresso/walnut set, not a
+// grey inversion.
 
 export type Palette = {
   ground: string;      // app canvas
@@ -18,17 +17,17 @@ export type Palette = {
   line: string;        // hairline borders / separators
   line2: string;       // slightly stronger border
 
-  // Primary (Deep Teal in light; a brighter cyan-teal in dark so fills stay legible)
-  forest: string;      // token name kept for component compatibility = PRIMARY
+  // Primary (Warm Espresso in light; a brighter warm tone in dark so fills stay legible)
+  forest: string;      // token name kept for prompt compatibility = PRIMARY
   forestPressed: string;
   forestTint: string;  // wash behind active icons / badges
   onPrimary: string;   // text/icon color that sits ON a primary fill
 
-  // Accent (Signal Amber) — earnings, highlights, small emphasis
+  // Accent (Muted Sand) — stars, rings, small highlights
   accent: string;
   accentTint: string;
 
-  // A dark branded surface (earnings card, hero) — dark in BOTH themes
+  // A dark branded surface (points card, vehicle card) — dark in BOTH themes
   espresso: string;
   onEspresso: string;
   onEspressoMuted: string;
@@ -43,60 +42,60 @@ export type Palette = {
 };
 
 const light: Palette = {
-  ground: '#F7F9FA',
-  surface: '#EDF1F3',
+  ground: '#FDFDFB',
+  surface: '#F5F2ED',
   card: '#FFFFFF',
-  ink: '#12222B',
-  ink2: '#37505C',
-  muted: '#6B818C',
-  faint: '#A2B2BA',
-  line: '#E3E9EC',
-  line2: '#D6DEE2',
+  ink: '#3A2A1D',
+  ink2: '#5C4D3E',
+  muted: '#847A71',
+  faint: '#ABA49E',
+  line: '#E9E5DF',
+  line2: '#E0D9D1',
 
-  forest: '#0E6E7E',
-  forestPressed: '#0A5866',
-  forestTint: 'rgba(14,110,126,0.10)',
+  forest: '#5C3A21',
+  forestPressed: '#4A2E19',
+  forestTint: 'rgba(92,58,33,0.08)',
   onPrimary: '#FFFFFF',
 
-  accent: '#E0912F',
-  accentTint: 'rgba(224,145,47,0.16)',
+  accent: '#C29B74',
+  accentTint: 'rgba(194,155,116,0.16)',
 
-  espresso: '#0F2D3A',
-  onEspresso: '#E8F1F3',
-  onEspressoMuted: 'rgba(232,241,243,0.62)',
+  espresso: '#1F1813',
+  onEspresso: '#F3ECE3',
+  onEspressoMuted: 'rgba(243,236,227,0.62)',
 
   white: '#FFFFFF',
 
-  success: '#15A34A', successTint: 'rgba(21,163,74,0.12)',
+  success: '#16A34A', successTint: 'rgba(22,163,74,0.12)',
   error: '#DC2626',   errorTint: 'rgba(220,38,38,0.10)',
   warning: '#D97706', warningTint: 'rgba(217,119,6,0.12)',
   info: '#2563EB',    infoTint: 'rgba(37,99,235,0.12)',
 };
 
 const dark: Palette = {
-  ground: '#0B171D',
-  surface: '#132630',
-  card: '#152C37',
-  ink: '#E9F1F3',
-  ink2: '#C3D2D8',
-  muted: '#8497A0',
-  faint: '#5C6E77',
-  line: 'rgba(233,241,243,0.10)',
-  line2: 'rgba(233,241,243,0.16)',
+  ground: '#161210',
+  surface: '#211B16',
+  card: '#241E18',
+  ink: '#F1EBE2',
+  ink2: '#D6CDC1',
+  muted: '#9A9088',
+  faint: '#6E655C',
+  line: 'rgba(241,235,226,0.10)',
+  line2: 'rgba(241,235,226,0.16)',
 
-  // In dark, a solid deep-teal fill would recede — the primary becomes a
-  // brighter cyan-teal with dark text on it.
-  forest: '#3FC2D1',
-  forestPressed: '#33A7B5',
-  forestTint: 'rgba(63,194,209,0.14)',
-  onPrimary: '#06161B',
+  // In dark, a solid espresso fill would disappear — the primary becomes a
+  // brighter sand with dark text on it.
+  forest: '#D6AE80',
+  forestPressed: '#C29B6A',
+  forestTint: 'rgba(214,174,128,0.14)',
+  onPrimary: '#1A1410',
 
-  accent: '#F1AE52',
-  accentTint: 'rgba(241,174,82,0.16)',
+  accent: '#D6AE80',
+  accentTint: 'rgba(214,174,128,0.14)',
 
-  espresso: '#071319',
-  onEspresso: '#E9F1F3',
-  onEspressoMuted: 'rgba(233,241,243,0.60)',
+  espresso: '#0F0C0A',
+  onEspresso: '#F1EBE2',
+  onEspressoMuted: 'rgba(241,235,226,0.60)',
 
   white: '#FFFFFF',
 
@@ -116,11 +115,12 @@ export const radius = { sm: 10, md: 14, lg: 18, xl: 22, pill: 999 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
-// Cool-tinted elevation. shadowColor stays a deep slate-teal.
+// Warm-tinted elevation. shadowColor stays umber; on dark grounds the elevation
+// reads mostly via Android's `elevation` and the card's own border.
 export const shadows = {
-  sm: { shadowColor: '#0B222B', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 2, elevation: 1 },
-  md: { shadowColor: '#0B222B', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 4 },
-  lg: { shadowColor: '#0B222B', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 22, elevation: 12 },
+  sm: { shadowColor: '#241813', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  md: { shadowColor: '#241813', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 },
+  lg: { shadowColor: '#241813', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 22, elevation: 12 },
 } as const;
 
 export const font = { display: undefined as string | undefined };
