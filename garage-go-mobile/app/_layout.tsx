@@ -3,7 +3,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { AuthProvider } from '../lib/auth';
 import { ToastProvider } from '../components/toast';
 import { ThemeProvider, useTheme } from '../lib/theme-context';
@@ -33,11 +32,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>
-            <BottomSheetModalProvider>
-              <ToastProvider>
-                <Root />
-              </ToastProvider>
-            </BottomSheetModalProvider>
+            <ToastProvider>
+              <Root />
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>

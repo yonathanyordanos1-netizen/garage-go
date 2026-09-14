@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { Icon } from '../../lib/icons';
 import { garages, services, timeSlots, primaryVehicle } from '../../lib/data';
 import { generateBookingId, mockPayWithTelebirr, TELEBIRR_NUMBERS } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
+import { addBooking, toggleSaved, getSaved } from '../../lib/store';
 import * as haptics from '../../lib/haptics';
 
 function nextDays(n: number) {
@@ -45,12 +46,22 @@ export default function GarageDetail() {
 
   const step = slot != null ? 2 : 1;
 
+  useEffect(() => { getSaved().then((ids) => setSaved(ids.includes(g.id))); }, [g.id]);
+  async function onToggleSave() { haptics.select(); setSaved(await toggleSaved(g.id)); }
+
   async function confirmPay() {
     setPaying(true);
     haptics.tap();
     const chosen = TELEBIRR_NUMBERS[0];
     await mockPayWithTelebirr(chosen.number, chosen.owner, 100);
     const code = generateBookingId();
+    const slotLabel = `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`;
+    // Persist locally (works in dev mode / offline; source of truth for the UI).
+    await addBooking({
+      code, garage: g.name, service: services[svc].n, slot: slotLabel,
+      vehicle: `${primaryVehicle.make} ${primaryVehicle.model} ${primaryVehicle.year}`,
+      status: 'upcoming', fee: 100, createdAt: Date.now(),
+    });
     // Best-effort write to Supabase (won't block the UX if the table/policy differs).
     try {
       if (session?.user) {
@@ -81,7 +92,7 @@ export default function GarageDetail() {
           <Thumb width="100%" height={220} seed={0} icon="garage" />
           <View style={{ position: 'absolute', top: insets.top + 8, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
             <IconButton icon="chevL" onPress={() => router.back()} />
-            <IconButton icon="heart" tint={saved ? colors.error : colors.ink2} onPress={() => { haptics.select(); setSaved((s) => !s); }} />
+            <IconButton icon="heart" tint={saved ? colors.error : colors.ink2} onPress={onToggleSave} />
           </View>
         </View>
 
@@ -106,7 +117,7 @@ export default function GarageDetail() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, marginTop: 12 }}>
-            {g.tags.concat(['AC', 'Warranty']).map((t) => <Badge key={t} label={t} variant="secondary" />)}
+            {[...new Set([...g.tags, 'AC', 'Warranty'])].map((t, i) => <Badge key={`${t}-${i}`} label={t} variant="secondary" />)}
           </ScrollView>
 
           {/* Service selection */}

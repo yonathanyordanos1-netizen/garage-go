@@ -71,10 +71,10 @@ export default function ProductDetail() {
       {/* Sticky bar */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.line }}>
         <View style={{ flex: 1 }}>
-          <Button label="Call seller" icon="phone" variant="outline" onPress={() => Linking.openURL('tel:' + p.phone)} />
+          <Button label="Call" icon="phone" variant="outline" onPress={() => Linking.openURL('tel:' + p.phone)} />
         </View>
-        <View style={{ flex: 1 }}>
-          <Button label="WhatsApp" icon="chat" onPress={() => Linking.openURL('https://wa.me/' + p.phone.replace('+', ''))} />
+        <View style={{ flex: 1.6 }}>
+          <Button label="Chat with seller" icon="chat" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: p.phone, name: p.seller, product: p.n } })} />
         </View>
       </View>
     </View>

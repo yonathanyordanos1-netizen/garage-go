@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Garage Go Owners",
+    "slug": "garage-go-owners",
+    "version": "1.0.0",
+    "scheme": "garagegoowners",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.garagego.owners"
+    },
+    "android": {
+      "package": "com.garagego.owners",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F2D3A"
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

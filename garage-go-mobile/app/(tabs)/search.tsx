@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../lib/theme-context';
@@ -18,6 +18,7 @@ export default function Search() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const [query, setQuery] = useState('');
   const [cat, setCat] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sort, setSort] = useState(0);
@@ -26,14 +27,37 @@ export default function Search() {
 
   const list = useMemo(() => {
     let g = [...garages];
+
+    // Text search — matches against name, area, and tags
+    const q = query.trim().toLowerCase();
+    if (q.length > 0) {
+      g = g.filter((x) =>
+        x.name.toLowerCase().includes(q) ||
+        x.area.toLowerCase().includes(q) ||
+        x.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+
+    // Category filter
     const map = ['', 'Engine', 'Tyres', 'Electrical', 'Body work', 'AC'];
     if (cat > 0) g = g.filter((x) => x.tags.some((t) => t.includes(map[cat])));
+
+    // Rating filter
     if (minRating > 0) g = g.filter((x) => x.rating >= minRating);
+
+    // Sorting
     if (sort === 1) g.sort((a, b) => b.rating - a.rating);
     else if (sort === 2) g.sort((a, b) => a.from - b.from);
     else if (sort === 3) g.sort((a, b) => b.from - a.from);
     return g;
-  }, [cat, sort, minRating]);
+  }, [query, cat, sort, minRating]);
+
+  function clearAll() {
+    setQuery('');
+    setCat(0);
+    setSort(0);
+    setMinRating(0);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ground }}>
@@ -41,10 +65,24 @@ export default function Search() {
         <View style={{ paddingHorizontal: 16 }}>
           <Text style={{ fontSize: 24, fontWeight: '700', color: colors.ink, letterSpacing: -0.5 }}>Find a garage</Text>
 
+          {/* Real search input */}
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, height: 48 }}>
-              <Icon name="pin" size={18} color={colors.accent} strokeWidth={2} />
-              <Text style={{ flex: 1, fontSize: 13.5, color: colors.ink }}>Bole, Addis Ababa</Text>
+              <Icon name="search" size={18} color={colors.accent} strokeWidth={2} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search garage, area, or service"
+                placeholderTextColor={colors.faint}
+                style={{ flex: 1, fontSize: 13.5, color: colors.ink, paddingVertical: 0 }}
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              {query.length > 0 && (
+                <Pressable onPress={() => setQuery('')} hitSlop={8}>
+                  <Icon name="x" size={16} color={colors.faint} />
+                </Pressable>
+              )}
             </View>
             <Pressable
               onPress={() => setFilterOpen(true)}
@@ -55,6 +93,7 @@ export default function Search() {
             </Pressable>
           </View>
 
+          {/* Category chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
             {CATS.map((c, i) => {
               const on = cat === i;
@@ -67,14 +106,23 @@ export default function Search() {
           </ScrollView>
         </View>
 
+        {/* Results count + sort label */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 16 }}>
-          <Text style={{ fontSize: 12.5, color: colors.muted }}>{list.length} garages nearby</Text>
+          <Text style={{ fontSize: 12.5, color: colors.muted }}>
+            {list.length} garage{list.length !== 1 ? 's' : ''}{query ? ` for "${query}"` : ' nearby'}
+          </Text>
           <Text style={{ fontSize: 12.5, fontWeight: '600', color: colors.forest }}>Sort: {SORTS[sort]}</Text>
         </View>
 
+        {/* Results */}
         <View style={{ paddingHorizontal: 16, marginTop: 12, gap: 12 }}>
           {list.length === 0 ? (
-            <EmptyState icon="search" title="No garages found" description="Try a different category or clear your filters." action={{ label: 'Clear filters', onPress: () => { setCat(0); setSort(0); setMinRating(0); } }} />
+            <EmptyState
+              icon="search"
+              title={query ? `No results for "${query}"` : 'No garages found'}
+              description={query ? 'Try a different name, area, or service type.' : 'Try a different category or clear your filters.'}
+              action={{ label: 'Clear all', onPress: clearAll }}
+            />
           ) : list.map((g, i) => (
             <Card key={g.id} variant="interactive" onPress={() => router.push(`/garage/${g.id}`)}>
               <View style={{ flexDirection: 'row', padding: 12, gap: 12 }}>
@@ -104,6 +152,7 @@ export default function Search() {
         </View>
       </ScrollView>
 
+      {/* Filter sheet */}
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} snapPoints={['62%']} title="Filter garages" description={`${list.length} garages match`}>
         <Text style={{ fontSize: 12, fontWeight: '600', color: colors.ink2, marginBottom: 10 }}>Sort by</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

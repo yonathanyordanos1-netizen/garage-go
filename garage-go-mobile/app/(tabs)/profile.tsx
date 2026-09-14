@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../lib/theme-context';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../components/toast';
 import { Card, Avatar, Badge, Button, Separator, radius, shadows } from '../../components/ui';
 import { Icon, IconName } from '../../lib/icons';
+import { getBookings, getSaved } from '../../lib/store';
 
 type Row = { icon: IconName; label: string; sub?: string; onPress: () => void; danger?: boolean };
 
@@ -19,12 +20,16 @@ export default function Profile() {
 
   const name = profile?.full_name || 'Dawit Mekonnen';
   const email = session?.user?.email || profile?.phone || '+251 91 •• •• 42';
+  const [counts, setCounts] = useState({ bookings: 0, saved: 0 });
+  useFocusEffect(useCallback(() => {
+    Promise.all([getBookings(), getSaved()]).then(([b, s]) => setCounts({ bookings: b.length, saved: s.length }));
+  }, []));
 
   const sections: { header: string; rows: Row[] }[] = [
     {
       header: 'Account', rows: [
-        { icon: 'clock', label: 'Booking history', sub: '24 reservations', onPress: () => router.push('/bookings') },
-        { icon: 'heart', label: 'Saved garages', sub: '6 saved', onPress: () => toast.info('Coming soon') },
+        { icon: 'clock', label: 'Booking history', sub: `${counts.bookings} reservation${counts.bookings === 1 ? '' : 's'}`, onPress: () => router.push('/bookings') },
+        { icon: 'heart', label: 'Saved garages', sub: `${counts.saved} saved`, onPress: () => router.push('/saved') },
         { icon: 'car', label: 'My vehicles', sub: 'Toyota Vitz 2014 · +1', onPress: () => toast.info('Coming soon') },
         { icon: 'wallet', label: 'Payment methods', sub: 'Telebirr · CBE Birr', onPress: () => toast.info('Coming soon') },
       ],
@@ -64,7 +69,7 @@ export default function Profile() {
       <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
         <Card>
           <View style={{ flexDirection: 'row', paddingVertical: 16 }}>
-            {[['24', 'Bookings'], ['6', 'Saved'], ['4.9', 'Rating']].map(([v, k], i) => (
+            {[[String(counts.bookings), 'Bookings'], [String(counts.saved), 'Saved'], ['4.9', 'Rating']].map(([v, k], i) => (
               <View key={k} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i === 0 ? 0 : 1, borderLeftColor: colors.line }}>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>{v}</Text>
                 <Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>{k}</Text>

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { useTheme } from '../lib/theme-context';
 import { Button, Badge, Separator, radius, shadows } from '../components/ui';
 import { Icon } from '../lib/icons';
@@ -16,7 +16,7 @@ export default function Confirmation() {
   const insets = useSafeAreaInsets();
 
   const pop = useSharedValue(0);
-  useEffect(() => { pop.value = withSpring(1, { damping: 12, stiffness: 300 }); haptics.success(); }, []);
+  useEffect(() => { pop.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.back(1.3)) }); haptics.success(); }, []);
   const badge = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
 
   const rows: [string, string][] = [

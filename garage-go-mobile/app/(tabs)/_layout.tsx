@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../lib/auth';
 import { useTheme } from '../../lib/theme-context';
@@ -20,7 +20,7 @@ const TABS: Record<string, { icon: IconName; label: string }> = {
 function TabButton({ focused, meta, onPress }: { focused: boolean; meta: { icon: IconName; label: string }; onPress: () => void }) {
   const { colors } = useTheme();
   const v = useSharedValue(focused ? 1 : 0);
-  useEffect(() => { v.value = focused ? withSpring(1, { damping: 15, stiffness: 400 }) : withTiming(0, { duration: 150 }); }, [focused]);
+  useEffect(() => { v.value = withTiming(focused ? 1 : 0, { duration: 180 }); }, [focused]);
   const pill = useAnimatedStyle(() => ({ opacity: v.value, transform: [{ scale: 0.6 + v.value * 0.4 }] }));
   const tint = focused ? colors.ink : colors.muted;
   return (

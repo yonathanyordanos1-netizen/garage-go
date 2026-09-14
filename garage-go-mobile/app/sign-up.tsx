@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
-import { useAuth } from '../lib/auth';
 import { Button, Field, OtpInput, IconButton } from '../components/ui';
 import { Icon } from '../lib/icons';
+import { otpSend, otpVerify, otpMessage, DEV_OTP } from '../lib/supabase';
+import { useAuth } from '../lib/auth';
 import * as haptics from '../lib/haptics';
 
 export default function SignUp() {
@@ -20,22 +21,55 @@ export default function SignUp() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fullPhone = () => '+251 ' + phone.replace(/[^0-9]/g, '');
+  const digits = phone.replace(/\D/g, '');
+  const fullPhone = '+251' + digits;
 
-  function sendCode() {
-    if (!name.trim()) return toast.error('Enter your full name');
-    if (phone.replace(/[^0-9]/g, '').length < 9) return toast.error('Enter a valid phone number');
-    setOtpSent(true);
-    toast.success('Code sent to ' + fullPhone());
+  useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
+  function startCooldown(seconds: number) {
+    setCooldown(seconds);
+    if (timer.current) clearInterval(timer.current);
+    timer.current = setInterval(() => {
+      setCooldown((s) => { if (s <= 1) { if (timer.current) clearInterval(timer.current); return 0; } return s - 1; });
+    }, 1000);
   }
+
+  async function sendCode() {
+    if (!name.trim()) return toast.error('Enter your full name.');
+    if (digits.length !== 9) return toast.error('Enter a valid Ethiopian number (+251 then 9 digits).');
+    if (DEV_OTP) {
+      setOtpSent(true); setOtp(''); startCooldown(60);
+      return toast.success('Dev mode — enter any 6 digits');
+    }
+    setSending(true);
+    const r = await otpSend(fullPhone);
+    setSending(false);
+    if (!r.ok) return toast.error(otpMessage(r.error, { retryAfter: r.retryAfter }));
+    setOtpSent(true);
+    setOtp('');
+    startCooldown(r.resendIn);
+    toast.success('Code sent to ' + fullPhone);
+  }
+
   async function verify() {
-    if (otp.length < 6) return toast.error('Enter the 6-digit code');
-    setBusy(true);
-    await demoSignIn(fullPhone(), name.trim());
+    if (otp.length < 6) return toast.error('Enter the 6-digit code.');
+    if (DEV_OTP) {
+      await demoSignIn(fullPhone, name.trim());
+      haptics.success();
+      return router.replace('/(tabs)');
+    }
+    setVerifying(true);
+    const r = await otpVerify(fullPhone, otp, name.trim());
+    setVerifying(false);
+    if (!r.ok) {
+      if (r.error === 'expired' || r.error === 'too_many_attempts') setOtp('');
+      return toast.error(otpMessage(r.error, { attemptsLeft: r.attemptsLeft }));
+    }
     haptics.success();
-    setBusy(false);
     router.replace('/(tabs)');
   }
 
@@ -58,18 +92,28 @@ export default function SignUp() {
           <>
             <Field label="Full name" icon="user" placeholder="Dawit Mekonnen" value={name} onChangeText={setName} />
             <Field label="Phone number" icon="phone" prefix="+251" placeholder="9•• •• •• ••" value={phone} onChangeText={setPhone} keyboardType="number-pad" description="We'll text you a one-time code to verify your number." />
-            <Button label="Send code" onPress={sendCode} />
+            <Button label="Send code" onPress={sendCode} loading={sending} disabled={digits.length !== 9 || !name.trim()} />
           </>
         ) : (
           <>
             <Text style={{ fontSize: 12.5, fontWeight: '600', color: colors.ink2 }}>Verification code</Text>
             <OtpInput value={otp} onChange={setOtp} />
-            <Text style={{ fontSize: 12, color: colors.muted }}>
-              Sent to <Text style={{ color: colors.ink, fontWeight: '600' }}>{fullPhone()}</Text>.{' '}
-              <Text onPress={sendCode} style={{ color: colors.accent, fontWeight: '700' }}>Resend</Text>
-            </Text>
-            <Button label="Create account" iconRight="arrowR" onPress={verify} loading={busy} disabled={otp.length < 6} />
-            <Text style={{ fontSize: 11.5, color: colors.faint, textAlign: 'center' }}>Demo: enter any 6 digits to continue.</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, color: colors.muted, flex: 1 }}>
+                Sent to <Text style={{ color: colors.ink, fontWeight: '600' }}>{fullPhone}</Text>
+              </Text>
+              {cooldown > 0 ? (
+                <Text style={{ fontSize: 12, color: colors.faint }}>Resend in {cooldown}s</Text>
+              ) : (
+                <Pressable onPress={sendCode} disabled={sending}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accent }}>Resend code</Text>
+                </Pressable>
+              )}
+            </View>
+            <Button label="Create account" iconRight="arrowR" onPress={verify} loading={verifying} disabled={otp.length < 6} />
+            <Pressable onPress={() => { setOtpSent(false); setOtp(''); }} style={{ alignSelf: 'center' }}>
+              <Text style={{ fontSize: 12.5, color: colors.muted }}>Change details</Text>
+            </Pressable>
           </>
         )}
       </View>
