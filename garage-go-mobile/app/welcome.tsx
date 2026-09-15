@@ -9,7 +9,7 @@ import { useTheme } from '../lib/theme-context';
 import { Button } from '../components/ui';
 import * as haptics from '../lib/haptics';
 
-const logo = require('../assets/logo.jpeg');
+const logo = require('../assets/icon.png');
 
 type Step = { eyebrow: string; title: string; body: string; cta: string };
 
@@ -62,7 +62,7 @@ export default function Welcome() {
         {steps.map((s, i) => (
           <View key={i} style={{ width: pageW, paddingHorizontal: pad, paddingTop: 18 }}>
             <View style={{ backgroundColor: colors.surface, borderRadius: 28, padding: 24, alignItems: 'center', overflow: 'hidden' }}>
-              <Image source={logo} style={{ width: 160, height: 160 }} resizeMode="contain" />
+              <Image source={logo} style={{ width: 148, height: 148, borderRadius: 34, borderWidth: 1, borderColor: colors.line2 }} resizeMode="cover" />
             </View>
             <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.accent, marginTop: 26 }}>{s.eyebrow}</Text>
             <Text style={{ fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.8, lineHeight: 37, marginTop: 8 }}>{s.title}</Text>
