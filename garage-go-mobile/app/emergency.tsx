@@ -6,13 +6,14 @@ import { useTheme } from '../lib/theme-context';
 import { useToast } from '../components/toast';
 import { Card, Badge, Button, IconButton, radius } from '../components/ui';
 import { Icon } from '../lib/icons';
-import { mechanics } from '../lib/data';
+import { useData } from '../lib/data';
 
 export default function Emergency() {
   const router = useRouter();
   const { colors } = useTheme();
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const { mechanics } = useData();
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.ground }} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
@@ -37,7 +38,7 @@ export default function Emergency() {
       <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 12 }}>Verified mechanics nearby</Text>
       <View style={{ gap: 11 }}>
         {mechanics.map((m) => (
-          <Card key={m.name}>
+          <Card key={m.id}>
             <View style={{ padding: 13 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
                 <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' }}>
@@ -46,13 +47,15 @@ export default function Emergency() {
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{m.name}</Text>
-                    <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />
+                    {m.verified && <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />}
                   </View>
-                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 2 }}>{m.area} · {m.exp} exp</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 2 }}>{m.area} · {m.experience}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Badge label={m.eta} variant="secondary" />
-                  <Text style={{ fontSize: 10.5, color: colors.faint, marginTop: 4 }}>{m.dist}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name="star" size={12} color="#C29B74" />
+                    <Text style={{ fontSize: 11.5, fontWeight: '600', color: colors.ink }}>{m.rating}</Text>
+                  </View>
                 </View>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 10 }}>
@@ -62,7 +65,7 @@ export default function Emergency() {
                 <View style={{ flex: 1 }}>
                   <Button label="Request now" size="sm" onPress={() => toast.success(`Requesting ${m.name}…`)} />
                 </View>
-                <IconButton icon="phone" onPress={() => Linking.openURL('tel:' + m.phone)} label={`Call ${m.name}`} />
+                {m.phone && <IconButton icon="phone" onPress={() => Linking.openURL('tel:' + m.phone)} label={`Call ${m.name}`} />}
               </View>
             </View>
           </Card>

@@ -9,7 +9,7 @@ import { Badge, Button, StepIndicator, IconButton, Separator, radius } from '../
 import { Sheet } from '../../components/sheet';
 import { Thumb } from '../../components/thumb';
 import { Icon } from '../../lib/icons';
-import { garages, services, timeSlots, primaryVehicle } from '../../lib/data';
+import { useData, servicesForGarage, timeSlots } from '../../lib/data';
 import { generateBookingId, mockPayWithTelebirr, TELEBIRR_NUMBERS } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import { addBooking, toggleSaved, getSaved } from '../../lib/store';
@@ -33,8 +33,10 @@ export default function GarageDetail() {
   const toast = useToast();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  const { garages, services, vehicle } = useData();
 
   const g = garages.find((x) => x.id === id) ?? garages[0];
+  const garageServices = g ? servicesForGarage(services, g.id) : [];
   const days = nextDays(14);
 
   const [svc, setSvc] = useState(0);
@@ -46,8 +48,12 @@ export default function GarageDetail() {
 
   const step = slot != null ? 2 : 1;
 
-  useEffect(() => { getSaved().then((ids) => setSaved(ids.includes(g.id))); }, [g.id]);
-  async function onToggleSave() { haptics.select(); setSaved(await toggleSaved(g.id)); }
+  useEffect(() => { if (g) getSaved().then((ids) => setSaved(ids.includes(g.id))); }, [g?.id]);
+  async function onToggleSave() { if (!g) return; haptics.select(); setSaved(await toggleSaved(g.id)); }
+
+  if (!g) return null;
+
+  const selectedService = garageServices[svc];
 
   async function confirmPay() {
     setPaying(true);
@@ -56,22 +62,21 @@ export default function GarageDetail() {
     await mockPayWithTelebirr(chosen.number, chosen.owner, 100);
     const code = generateBookingId();
     const slotLabel = `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`;
-    // Persist locally (works in dev mode / offline; source of truth for the UI).
+    const vehicleLabel = vehicle ? `${vehicle.make} ${vehicle.model} ${vehicle.year}` : 'No vehicle';
     await addBooking({
-      code, garage: g.name, service: services[svc].n, slot: slotLabel,
-      vehicle: `${primaryVehicle.make} ${primaryVehicle.model} ${primaryVehicle.year}`,
-      status: 'upcoming', fee: 100, createdAt: Date.now(),
+      code, garage: g.name, service: selectedService?.name ?? '', slot: slotLabel,
+      vehicle: vehicleLabel, status: 'upcoming', fee: 100, createdAt: Date.now(),
     });
-    // Best-effort write to Supabase (won't block the UX if the table/policy differs).
     try {
       if (session?.user) {
         const { data: b } = await supabase.from('bookings').insert({
-          user_id: session.user.id, garage_name: g.name, service: services[svc].n,
-          slot: `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`,
-          fee: 100, platform_share: 50, garage_share: 50, code, status: 'confirmed',
+          user_id: session.user.id, garage_id: g.id, service_id: selectedService?.id,
+          garage_name: g.name, service_name: selectedService?.name ?? '',
+          booking_date: days[day].key, slot: timeSlots[slot ?? 0],
+          vehicle: vehicleLabel, fee: 100, platform_cut: 50, garage_cut: 50, status: 'confirmed',
         }).select().single();
         if (b?.id) {
-          await supabase.from('payments').insert({ booking_id: b.id, user_id: session.user.id, method: 'telebirr', amount: 100, status: 'success', number: chosen.number });
+          await supabase.from('payments').insert({ booking_id: b.id, user_id: session.user.id, method: 'telebirr', amount: 100, status: 'success' });
         }
       }
     } catch {}
@@ -81,7 +86,7 @@ export default function GarageDetail() {
     toast.success('Reservation confirmed!');
     router.replace({
       pathname: '/confirmation',
-      params: { code, garage: g.name, service: services[svc].n, slot: `${days[day].label} ${days[day].date} · ${timeSlots[slot ?? 0]}`, number: chosen.number },
+      params: { code, garage: g.name, service: selectedService?.name ?? '', slot: slotLabel, number: chosen.number },
     });
   }
 
@@ -103,44 +108,42 @@ export default function GarageDetail() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 21, fontWeight: '700', color: colors.ink }}>{g.name}</Text>
-                <Icon name="shield" size={16} color={colors.forest} strokeWidth={2} />
+                {g.verified && <Icon name="shield" size={16} color={colors.forest} strokeWidth={2} />}
               </View>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 5 }}>{g.area} · {g.dist} · {g.hours}</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 5 }}>{g.area} · {g.hours}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Icon name="star" size={14} color="#C29B74" />
                 <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{g.rating}</Text>
               </View>
-              <Text style={{ fontSize: 11, color: colors.faint }}>{g.reviews} reviews</Text>
+              <Text style={{ fontSize: 11, color: colors.faint }}>{g.reviews_count} reviews</Text>
             </View>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, marginTop: 12 }}>
-            {[...new Set([...g.tags, 'AC', 'Warranty'])].map((t, i) => <Badge key={`${t}-${i}`} label={t} variant="secondary" />)}
+            {[...new Set([...g.tags, 'Warranty'])].map((t, i) => <Badge key={`${t}-${i}`} label={t} variant="secondary" />)}
           </ScrollView>
 
-          {/* Service selection */}
           <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Choose a service</Text>
           <View style={{ gap: 9 }}>
-            {services.map((s, i) => {
+            {garageServices.map((s, i) => {
               const on = svc === i;
               return (
-                <Pressable key={s.n} onPress={() => { haptics.select(); setSvc(i); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: on ? colors.forest : colors.line, backgroundColor: on ? colors.forestTint : colors.card }}>
+                <Pressable key={s.id} onPress={() => { haptics.select(); setSvc(i); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: on ? colors.forest : colors.line, backgroundColor: on ? colors.forestTint : colors.card }}>
                   <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: on ? colors.forest : colors.line2, alignItems: 'center', justifyContent: 'center' }}>
                     {on && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.forest }} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}>{s.n}</Text>
-                    <Text style={{ fontSize: 11, color: colors.muted }}>{s.d}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}>{s.name}</Text>
+                    <Text style={{ fontSize: 11, color: colors.muted }}>{s.duration}{s.description ? ` · ${s.description}` : ''}</Text>
                   </View>
-                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ink }}>{s.p} ETB</Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ink }}>{s.price} ETB</Text>
                 </Pressable>
               );
             })}
           </View>
 
-          {/* Date */}
           <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Pick a date</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {days.map((d, i) => {
@@ -155,7 +158,6 @@ export default function GarageDetail() {
             })}
           </ScrollView>
 
-          {/* Time */}
           <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Time slot</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {timeSlots.map((t, i) => {
@@ -169,22 +171,24 @@ export default function GarageDetail() {
             })}
           </View>
 
-          {/* Vehicle */}
-          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Vehicle</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card }}>
-            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="car" size={20} color={colors.ink2} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.ink }}>{primaryVehicle.make} {primaryVehicle.model} {primaryVehicle.year}</Text>
-              <Text style={{ fontSize: 11.5, color: colors.muted }}>{primaryVehicle.plate}</Text>
-            </View>
-            <Badge label="Primary" variant="secondary" />
-          </View>
+          {vehicle && (
+            <>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 22, marginBottom: 10 }}>Vehicle</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="car" size={20} color={colors.ink2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.ink }}>{vehicle.make} {vehicle.model} {vehicle.year}</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.muted }}>{vehicle.plate}</Text>
+                </View>
+                <Badge label="Primary" variant="secondary" />
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 
-      {/* Sticky bar */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 13, paddingBottom: insets.bottom + 14, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.line }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>Reservation fee</Text>
@@ -195,7 +199,6 @@ export default function GarageDetail() {
         </View>
       </View>
 
-      {/* Payment sheet */}
       <Sheet open={payOpen} onClose={() => setPayOpen(false)} snapPoints={['62%']} title="Complete payment" description="Pay via Telebirr to confirm your booking">
         <View style={{ alignItems: 'center', paddingVertical: 6 }}>
           <Text style={{ fontSize: 32, fontWeight: '800', color: colors.ink }}>100 ETB</Text>
@@ -219,7 +222,6 @@ export default function GarageDetail() {
         <View style={{ marginTop: 20 }}>
           <Button label={paying ? 'Processing…' : 'Confirm & pay'} loading={paying} onPress={confirmPay} />
         </View>
-        <Text style={{ fontSize: 11, color: colors.faint, textAlign: 'center', marginTop: 12 }}>Mock payment — no real transaction is made.</Text>
       </Sheet>
     </View>
   );

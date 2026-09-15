@@ -7,7 +7,7 @@ import { Card, Badge, EmptyState, StarRating, Button, Separator, radius } from '
 import { Sheet } from '../../components/sheet';
 import { Thumb } from '../../components/thumb';
 import { Icon } from '../../lib/icons';
-import { garages } from '../../lib/data';
+import { useData } from '../../lib/data';
 import * as haptics from '../../lib/haptics';
 
 const CATS = ['All services', 'Engine', 'Tyres', 'Electrical', 'Body work', 'AC & cooling'];
@@ -17,6 +17,7 @@ export default function Search() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { garages } = useData();
 
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState(0);
@@ -28,29 +29,25 @@ export default function Search() {
   const list = useMemo(() => {
     let g = [...garages];
 
-    // Text search — matches against name, area, and tags
     const q = query.trim().toLowerCase();
     if (q.length > 0) {
       g = g.filter((x) =>
         x.name.toLowerCase().includes(q) ||
-        x.area.toLowerCase().includes(q) ||
+        (x.area ?? '').toLowerCase().includes(q) ||
         x.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
 
-    // Category filter
     const map = ['', 'Engine', 'Tyres', 'Electrical', 'Body work', 'AC'];
     if (cat > 0) g = g.filter((x) => x.tags.some((t) => t.includes(map[cat])));
 
-    // Rating filter
     if (minRating > 0) g = g.filter((x) => x.rating >= minRating);
 
-    // Sorting
     if (sort === 1) g.sort((a, b) => b.rating - a.rating);
-    else if (sort === 2) g.sort((a, b) => a.from - b.from);
-    else if (sort === 3) g.sort((a, b) => b.from - a.from);
+    else if (sort === 2) g.sort((a, b) => a.price_from - b.price_from);
+    else if (sort === 3) g.sort((a, b) => b.price_from - a.price_from);
     return g;
-  }, [query, cat, sort, minRating]);
+  }, [garages, query, cat, sort, minRating]);
 
   function clearAll() {
     setQuery('');
@@ -65,7 +62,6 @@ export default function Search() {
         <View style={{ paddingHorizontal: 16 }}>
           <Text style={{ fontSize: 24, fontWeight: '700', color: colors.ink, letterSpacing: -0.5 }}>Find a garage</Text>
 
-          {/* Real search input */}
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, height: 48 }}>
               <Icon name="search" size={18} color={colors.accent} strokeWidth={2} />
@@ -93,7 +89,6 @@ export default function Search() {
             </Pressable>
           </View>
 
-          {/* Category chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
             {CATS.map((c, i) => {
               const on = cat === i;
@@ -106,7 +101,6 @@ export default function Search() {
           </ScrollView>
         </View>
 
-        {/* Results count + sort label */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 16 }}>
           <Text style={{ fontSize: 12.5, color: colors.muted }}>
             {list.length} garage{list.length !== 1 ? 's' : ''}{query ? ` for "${query}"` : ' nearby'}
@@ -114,7 +108,6 @@ export default function Search() {
           <Text style={{ fontSize: 12.5, fontWeight: '600', color: colors.forest }}>Sort: {SORTS[sort]}</Text>
         </View>
 
-        {/* Results */}
         <View style={{ paddingHorizontal: 16, marginTop: 12, gap: 12 }}>
           {list.length === 0 ? (
             <EmptyState
@@ -130,20 +123,19 @@ export default function Search() {
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{g.name}</Text>
-                    <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />
+                    {g.verified && <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />}
                   </View>
-                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 3 }}>{g.area} · {g.dist}</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 3 }}>{g.area}</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                    <Badge label={g.tags[0]} variant="secondary" />
-                    <Badge label={g.dist} variant="outline" />
+                    <Badge label={g.tags?.[0] ?? 'Service'} variant="secondary" />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Icon name="star" size={12} color="#C29B74" />
                       <Text style={{ fontSize: 11.5, fontWeight: '600', color: colors.ink }}>{g.rating}</Text>
-                      <Text style={{ fontSize: 11, color: colors.faint }}>({g.reviews})</Text>
+                      <Text style={{ fontSize: 11, color: colors.faint }}>({g.reviews_count})</Text>
                     </View>
-                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: colors.forest }}>From {g.from} ETB</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: colors.forest }}>From {g.price_from} ETB</Text>
                   </View>
                 </View>
               </View>
@@ -152,7 +144,6 @@ export default function Search() {
         </View>
       </ScrollView>
 
-      {/* Filter sheet */}
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} snapPoints={['62%']} title="Filter garages" description={`${list.length} garages match`}>
         <Text style={{ fontSize: 12, fontWeight: '600', color: colors.ink2, marginBottom: 10 }}>Sort by</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

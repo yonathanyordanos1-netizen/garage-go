@@ -3,7 +3,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from '../lib/auth';
+import { AuthProvider, useAuth } from '../lib/auth';
+import { DataProvider } from '../lib/data';
 import { ToastProvider } from '../components/toast';
 import { ThemeProvider, useTheme } from '../lib/theme-context';
 
@@ -26,15 +27,26 @@ function Root() {
   );
 }
 
+function DataBridge({ children }: { children: React.ReactNode }) {
+  const { session } = useAuth();
+  return (
+    <DataProvider userId={session?.user?.id}>
+      {children}
+    </DataProvider>
+  );
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>
-              <Root />
-            </ToastProvider>
+            <DataBridge>
+              <ToastProvider>
+                <Root />
+              </ToastProvider>
+            </DataBridge>
           </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>

@@ -29,7 +29,7 @@ const ROLE_KEY = 'owner_role';
 function demoProfile(d: DemoUser): Profile {
   return {
     id: 'demo',
-    full_name: d.name || 'Operator',
+    full_name: d.name || null,
     phone: d.phone,
     phone_verified: true,
     role: d.role === 'mechanic' ? 'mechanic' : 'garage',

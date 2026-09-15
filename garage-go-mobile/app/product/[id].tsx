@@ -7,7 +7,7 @@ import { useToast } from '../../components/toast';
 import { Badge, Separator, Avatar, Button, radius } from '../../components/ui';
 import { Thumb } from '../../components/thumb';
 import { Icon } from '../../lib/icons';
-import { products } from '../../lib/data';
+import { useData } from '../../lib/data';
 import { formatETB } from '../../lib/utils';
 import * as haptics from '../../lib/haptics';
 
@@ -17,15 +17,17 @@ export default function ProductDetail() {
   const { colors } = useTheme();
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const { products } = useData();
   const [saved, setSaved] = useState(false);
   const p = products.find((x) => x.id === id) ?? products[0];
+
+  if (!p) return null;
 
   const floatBtn = { width: 40, height: 40, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' } as const;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ground }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-        {/* Hero */}
         <View style={{ height: 300 }}>
           <Thumb width="100%" height={300} seed={5} icon="bag" />
           <View style={{ position: 'absolute', top: insets.top + 8, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -39,23 +41,21 @@ export default function ProductDetail() {
           </View>
         </View>
 
-        {/* Info card */}
         <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, marginTop: -24, padding: 20 }}>
-          <Badge label={p.category} variant="secondary" />
-          <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink, letterSpacing: -0.3, marginTop: 10 }}>{p.n}</Text>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.forest, marginTop: 8 }}>{formatETB(p.p)}</Text>
+          {p.category && <Badge label={p.category} variant="secondary" />}
+          <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink, letterSpacing: -0.3, marginTop: 10 }}>{p.name}</Text>
+          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.forest, marginTop: 8 }}>{formatETB(p.price)}</Text>
 
           <Separator style={{ marginVertical: 18 }} />
 
           <Text style={{ fontSize: 12, fontWeight: '600', color: colors.muted, letterSpacing: 0.5 }}>SELLER</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 }}>
-            <Avatar name={p.seller} size="md" />
+            <Avatar name={p.seller ?? 'Seller'} size="md" />
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{p.seller}</Text>
                 <Icon name="shield" size={13} color={colors.forest} strokeWidth={2} />
               </View>
-              <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 2 }}>Member since Jan 2024</Text>
             </View>
           </View>
 
@@ -63,18 +63,17 @@ export default function ProductDetail() {
 
           <Text style={{ fontSize: 12, fontWeight: '600', color: colors.muted, letterSpacing: 0.5 }}>DESCRIPTION</Text>
           <Text style={{ fontSize: 13.5, lineHeight: 22, color: colors.ink2, marginTop: 8 }}>
-            Genuine {p.n} — {p.c}. Sourced and inspected by {p.seller}. Fits most models in this class; message the seller to confirm compatibility with your vehicle before you buy.
+            Genuine {p.name} — {p.category}. Sourced and inspected by {p.seller}. Fits most models in this class; message the seller to confirm compatibility with your vehicle before you buy.
           </Text>
         </View>
       </ScrollView>
 
-      {/* Sticky bar */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.line }}>
         <View style={{ flex: 1 }}>
-          <Button label="Call" icon="phone" variant="outline" onPress={() => Linking.openURL('tel:' + p.phone)} />
+          <Button label="Call" icon="phone" variant="outline" onPress={() => { if (p.seller_phone) Linking.openURL('tel:' + p.seller_phone); }} />
         </View>
         <View style={{ flex: 1.6 }}>
-          <Button label="Chat with seller" icon="chat" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: p.phone, name: p.seller, product: p.n } })} />
+          <Button label="Chat with seller" icon="chat" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: p.seller_phone ?? '', name: p.seller ?? '', product: p.name } })} />
         </View>
       </View>
     </View>

@@ -1,18 +1,7 @@
-// Owner domain layer — the operator console's source of truth.
-//
-// Offline-first: state lives in-memory, is persisted to AsyncStorage, and is
-// seeded on first launch so every screen renders with realistic content in dev
-// mode (no live Supabase session needed). Screens subscribe with the exported
-// hooks (built on useSyncExternalStore) so a status change on one screen
-// updates the dashboard, jobs list, and earnings everywhere at once.
-//
-// When a real Supabase session exists the screens still read/write this store
-// for instant UX; wiring the same mutations to Supabase (bookings.status,
-// services, products) is a thin follow-up — the shapes here mirror the DB.
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { OwnerRole } from './auth';
+import { supabase } from './supabase';
 
 /* ─────────────────────────── Types (mirror the DB) ─────────────────────────── */
 
@@ -20,18 +9,18 @@ export type JobStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 
 
 export type Job = {
   id: string;
-  code: string;             // bookings.booking_code, e.g. GG-482193
+  code: string;
   customer: string;
   phone: string;
   vehicle: string;
   service: string;
   problem?: string;
-  date: string;             // ISO date
-  slot: string;             // e.g. "10:00"
-  fee: number;              // total charged to the customer (ETB)
-  garageCut: number;        // what the operator keeps after platform fee
+  date: string;
+  slot: string;
+  fee: number;
+  garageCut: number;
   status: JobStatus;
-  assignedTo?: string;      // mechanic name
+  assignedTo?: string;
   createdAt: number;
 };
 
@@ -39,7 +28,7 @@ export type ServiceItem = {
   id: string;
   name: string;
   description: string;
-  duration: string;         // e.g. "45–60 min"
+  duration: string;
   price: number;
   active: boolean;
 };
@@ -58,44 +47,72 @@ type StoreShape = {
   jobs: Job[];
   services: ServiceItem[];
   listings: Listing[];
-  online: boolean;          // garage/mechanic accepting new work
+  online: boolean;
 };
 
-/* ─────────────────────────── Seed content ─────────────────────────── */
+/* ─────────────────────────── Fetch from Supabase ─────────────────────────── */
 
-const now = Date.now();
-const iso = (dayOffset: number) => new Date(now + dayOffset * 864e5).toISOString().slice(0, 10);
+async function fetchFromSupabase(role: OwnerRole): Promise<StoreShape> {
+  const empty: StoreShape = { jobs: [], services: [], listings: [], online: true };
 
-function seed(role: OwnerRole): StoreShape {
-  const jobs: Job[] = [
-    { id: 'j1', code: 'GG-482193', customer: 'Dawit Mekonnen', phone: '+251911248763', vehicle: 'Toyota Vitz 2014 · AA-3-12345', service: 'Full engine diagnostics', problem: 'Check-engine light on, rough idle', date: iso(0), slot: '10:00', fee: 650, garageCut: 550, status: 'pending', createdAt: now - 12 * 6e4 },
-    { id: 'j2', code: 'GG-771020', customer: 'Sara Alemu', phone: '+251913550219', vehicle: 'Hyundai i20 2018 · AA-2-88771', service: 'Oil & filter change', problem: 'Due for service at 90,000 km', date: iso(0), slot: '11:30', fee: 480, garageCut: 400, status: 'pending', createdAt: now - 40 * 6e4 },
-    { id: 'j3', code: 'GG-118845', customer: 'Yonas Girma', phone: '+251921764108', vehicle: 'Suzuki Dzire 2020 · AA-1-40219', service: 'Brake pad replacement', problem: 'Squealing on the front axle', date: iso(0), slot: '14:00', fee: 900, garageCut: 780, status: 'confirmed', assignedTo: 'Abebe T.', createdAt: now - 3 * 36e5 },
-    { id: 'j4', code: 'GG-905513', customer: 'Helen Tadesse', phone: '+251911000010', vehicle: 'Toyota Corolla 2016 · AA-3-55120', service: 'AC regas & check', date: iso(1), slot: '09:00', fee: 1200, garageCut: 1040, status: 'confirmed', createdAt: now - 20 * 36e5 },
-    { id: 'j5', code: 'GG-330076', customer: 'Nahom Fikru', phone: '+251911000011', vehicle: 'Nissan Sunny 2012 · AA-2-11002', service: 'Full engine diagnostics', date: iso(-1), slot: '15:30', fee: 650, garageCut: 550, status: 'completed', assignedTo: 'Abebe T.', createdAt: now - 30 * 36e5 },
-    { id: 'j6', code: 'GG-660941', customer: 'Meron Haile', phone: '+251911000012', vehicle: 'Kia Rio 2019 · AA-1-77340', service: 'Oil & filter change', date: iso(-2), slot: '12:00', fee: 480, garageCut: 400, status: 'completed', createdAt: now - 52 * 36e5 },
-  ];
+  try {
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('*, profiles:user_id(full_name, phone)')
+      .order('created_at', { ascending: false });
 
-  const services: ServiceItem[] = [
-    { id: 's1', name: 'Full engine diagnostics', description: 'OBD scan + written report', duration: '45–60 min', price: 650, active: true },
-    { id: 's2', name: 'Oil & filter change', description: 'Labour only, parts extra', duration: '30 min', price: 480, active: true },
-    { id: 's3', name: 'Brake pad replacement', description: 'Front or rear axle, labour', duration: '1–2 hrs', price: 900, active: true },
-    { id: 's4', name: 'AC regas & check', description: 'Leak test + refrigerant top-up', duration: '1 hr', price: 1200, active: true },
-    { id: 's5', name: 'Wheel alignment', description: '4-wheel computerised', duration: '45 min', price: 700, active: false },
-  ];
+    const jobs: Job[] = (bookings ?? []).map((b: any) => ({
+      id: b.id,
+      code: b.booking_code ?? '',
+      customer: b.profiles?.full_name ?? 'Customer',
+      phone: b.profiles?.phone ?? '',
+      vehicle: b.vehicle ?? '',
+      service: b.service_name ?? '',
+      problem: b.problem ?? undefined,
+      date: b.booking_date ?? '',
+      slot: b.slot ?? '',
+      fee: b.fee ?? 0,
+      garageCut: b.garage_cut ?? 0,
+      status: b.status as JobStatus,
+      assignedTo: undefined,
+      createdAt: new Date(b.created_at).getTime(),
+    }));
 
-  const listings: Listing[] = [
-    { id: 'l1', name: 'Bosch S4 Battery 60Ah', category: 'Battery', price: 4200, stock: 8, tag: 'New', active: true },
-    { id: 'l2', name: 'Michelin 195/65 R15 (set of 4)', category: 'Tyres', price: 38000, stock: 3, tag: 'Popular', active: true },
-    { id: 'l3', name: 'Total 5W-30 Synthetic 4L', category: 'Oils', price: 2650, stock: 22, active: true },
-    { id: 'l4', name: 'Brake pad set — Vitz (front)', category: 'Car parts', price: 1900, stock: 0, active: false },
-    { id: 'l5', name: 'OBD2 Scanner ELM327', category: 'Tools', price: 1100, stock: 5, tag: 'Deal', active: true },
-  ];
+    const { data: svcRows } = await supabase
+      .from('services')
+      .select('*')
+      .order('name');
 
-  // Mechanics don't own a service catalog or listings; they only see jobs.
-  if (role === 'mechanic') return { jobs, services: [], listings: [], online: true };
-  if (role === 'seller') return { jobs: [], services: [], listings, online: true };
-  return { jobs, services, listings: [], online: true };
+    const services: ServiceItem[] = (svcRows ?? []).map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description ?? '',
+      duration: s.duration ?? '',
+      price: s.price ?? 0,
+      active: true,
+    }));
+
+    const { data: prodRows } = await supabase
+      .from('products')
+      .select('*')
+      .order('name');
+
+    const listings: Listing[] = (prodRows ?? []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category ?? '',
+      price: p.price ?? 0,
+      stock: 0,
+      tag: p.tag ?? undefined,
+      active: true,
+    }));
+
+    if (role === 'mechanic') return { jobs, services: [], listings: [], online: true };
+    if (role === 'seller') return { jobs: [], services: [], listings, online: true };
+    return { jobs, services, listings: [], online: true };
+  } catch {
+    return empty;
+  }
 }
 
 /* ─────────────────────────── Store engine ─────────────────────────── */
@@ -116,19 +133,29 @@ async function persist() {
   try { await AsyncStorage.setItem(KEY(currentRole), JSON.stringify(state)); } catch {}
 }
 
-// Load (or seed) the store for a role. Called once from the tab layout.
 export async function initStore(role: OwnerRole): Promise<void> {
   if (loaded && currentRole === role) return;
   currentRole = role;
-  try {
-    const raw = await AsyncStorage.getItem(KEY(role));
-    state = raw ? JSON.parse(raw) : seed(role);
-  } catch {
-    state = seed(role);
+
+  // Try fetching from Supabase first
+  const remote = await fetchFromSupabase(role);
+  const hasRemoteData = remote.jobs.length > 0 || remote.services.length > 0 || remote.listings.length > 0;
+
+  if (hasRemoteData) {
+    state = remote;
+  } else {
+    // Fall back to cached local data if available
+    try {
+      const raw = await AsyncStorage.getItem(KEY(role));
+      state = raw ? JSON.parse(raw) : { jobs: [], services: [], listings: [], online: true };
+    } catch {
+      state = { jobs: [], services: [], listings: [], online: true };
+    }
   }
+
   loaded = true;
   emit();
-  if (!(await AsyncStorage.getItem(KEY(role)))) persist();
+  persist();
 }
 
 export function resetStore(): void {
@@ -156,6 +183,7 @@ export function useStore(): StoreShape {
 export function setJobStatus(id: string, status: JobStatus): void {
   state.jobs = state.jobs.map((j) => (j.id === id ? { ...j, status } : j));
   emit(); persist();
+  supabase.from('bookings').update({ status }).eq('id', id).then(() => {});
 }
 
 export function assignJob(id: string, mechanic: string): void {

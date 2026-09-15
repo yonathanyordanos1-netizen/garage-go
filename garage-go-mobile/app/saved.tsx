@@ -6,13 +6,15 @@ import { useTheme } from '../lib/theme-context';
 import { Card, Badge, EmptyState, IconButton } from '../components/ui';
 import { Thumb } from '../components/thumb';
 import { Icon } from '../lib/icons';
-import { garages } from '../lib/data';
+import { useData } from '../lib/data';
 import { getSaved } from '../lib/store';
+import { formatETB } from '../lib/utils';
 
 export default function Saved() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { garages } = useData();
   const [ids, setIds] = useState<string[]>([]);
 
   useFocusEffect(useCallback(() => { getSaved().then(setIds); }, []));
@@ -36,13 +38,13 @@ export default function Saved() {
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: colors.ink }}>{g.name}</Text>
-                    <Icon name="shield" size={12} color={colors.forest} strokeWidth={2} />
+                    {g.verified && <Icon name="shield" size={12} color={colors.forest} strokeWidth={2} />}
                   </View>
-                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 3 }}>{g.area} · {g.dist}</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.muted, marginTop: 3 }}>{g.area}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 7 }}>
                     <Icon name="star" size={12} color="#C29B74" />
                     <Text style={{ fontSize: 11.5, color: colors.ink }}>{g.rating}</Text>
-                    <Badge label={`From ${g.from} ETB`} variant="secondary" />
+                    <Badge label={`From ${formatETB(g.price_from)}`} variant="secondary" />
                   </View>
                 </View>
                 <Icon name="chevR" size={18} color={colors.faint} />

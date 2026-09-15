@@ -19,7 +19,7 @@ export type Profile = {
 type DemoUser = { name: string; phone: string };
 const DEMO_KEY = 'demo_session';
 function demoProfile(d: DemoUser): Profile {
-  return { id: 'demo', full_name: d.name || 'Dawit Mekonnen', phone: d.phone, phone_verified: true, role: 'customer', points: 640, city: 'Addis Ababa', avatar_url: null };
+  return { id: 'demo', full_name: d.name || null, phone: d.phone, phone_verified: true, role: 'customer', points: 0, city: 'Addis Ababa', avatar_url: null };
 }
 
 type AuthState = {

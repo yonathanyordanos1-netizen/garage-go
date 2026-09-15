@@ -6,7 +6,7 @@ import { useTheme } from '../../lib/theme-context';
 import { Card, Badge, EmptyState, radius } from '../../components/ui';
 import { Thumb } from '../../components/thumb';
 import { Icon } from '../../lib/icons';
-import { products } from '../../lib/data';
+import { useData } from '../../lib/data';
 import { formatETB } from '../../lib/utils';
 import * as haptics from '../../lib/haptics';
 
@@ -16,9 +16,10 @@ export default function Market() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { products } = useData();
   const [cat, setCat] = useState(0);
 
-  const list = useMemo(() => cat === 0 ? products : products.filter((p) => p.category === CATS[cat]), [cat]);
+  const list = useMemo(() => cat === 0 ? products : products.filter((p) => p.category === CATS[cat]), [products, cat]);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.ground }} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
@@ -52,9 +53,9 @@ export default function Market() {
                   {p.tag && <View style={{ position: 'absolute', top: 8, left: 8 }}><Badge label={p.tag} variant="default" /></View>}
                 </View>
                 <View style={{ padding: 12 }}>
-                  <Text numberOfLines={2} style={{ fontSize: 13, fontWeight: '600', color: colors.ink, lineHeight: 17, minHeight: 34 }}>{p.n}</Text>
-                  <Text style={{ fontSize: 10.5, color: colors.muted, marginTop: 4 }}>{p.c}</Text>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: colors.forest, marginTop: 7 }}>{formatETB(p.p)}</Text>
+                  <Text numberOfLines={2} style={{ fontSize: 13, fontWeight: '600', color: colors.ink, lineHeight: 17, minHeight: 34 }}>{p.name}</Text>
+                  <Text style={{ fontSize: 10.5, color: colors.muted, marginTop: 4 }}>{p.category}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: colors.forest, marginTop: 7 }}>{formatETB(p.price)}</Text>
                 </View>
               </Card>
             </View>
