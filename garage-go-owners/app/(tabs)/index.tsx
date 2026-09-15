@@ -4,11 +4,25 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../lib/theme-context';
 import { useAuth } from '../../lib/auth';
 import { Screen, Header } from '../../components/screen';
-import { Card, Toggle, Avatar } from '../../components/ui';
-import { Icon } from '../../lib/icons';
+import { Card, Avatar } from '../../components/ui';
+import { Icon, IconName } from '../../lib/icons';
 import { radius, shadows } from '../../lib/theme';
 import { formatETB } from '../../lib/utils';
 import { useStore, setOnline, computeEarnings, jobIsToday, Job } from '../../lib/owner';
+import * as haptics from '../../lib/haptics';
+
+/* Quick action tile — the "category navigation" row. */
+function QuickTile({ icon, label, tint, onPress }: { icon: IconName; label: string; tint?: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable onPress={() => { haptics.tap(); onPress(); }} style={{ flex: 1, alignItems: 'center', gap: 7 }}>
+      <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: tint ?? colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line }}>
+        <Icon name={icon} size={23} color={colors.forest} strokeWidth={2} />
+      </View>
+      <Text style={{ fontSize: 11.5, fontWeight: '600', color: colors.ink2 }} numberOfLines={1}>{label}</Text>
+    </Pressable>
+  );
+}
 
 function JobRow({ job, onPress, last }: { job: Job; onPress: () => void; last: boolean }) {
   const { colors } = useTheme();
@@ -31,7 +45,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { colors } = useTheme();
   const { profile, role } = useAuth();
-  const { jobs, services, listings, online } = useStore();
+  const { jobs, listings, online } = useStore();
 
   const earn = computeEarnings(jobs);
   const pending = jobs.filter((j) => j.status === 'pending').length;
@@ -39,22 +53,40 @@ export default function Dashboard() {
   const lowStock = listings.filter((l) => l.active && l.stock <= 3);
 
   const firstName = (profile?.full_name || 'Operator').split(' ')[0];
-  const onlineLabel = role === 'seller' ? 'Shop open' : role === 'mechanic' ? 'Available for jobs' : 'Accepting bookings';
+  const isSeller = role === 'seller';
 
-  // Two headline numbers shown inside the espresso card, per role.
-  const stat = role === 'seller'
+  const stat = isSeller
     ? { a: String(listings.filter((l) => l.active).length), aL: 'Active listings', b: String(lowStock.length), bL: 'Low stock' }
     : { a: String(pending), aL: 'New requests', b: String(todays.length), bL: 'Today’s jobs' };
+
+  // Quick actions (category-nav pattern), tailored per role.
+  const listingsHref = '/(tabs)/listings';
+  const actions: { icon: IconName; label: string; onPress: () => void }[] = [
+    { icon: 'search', label: 'Scan', onPress: () => router.push('/scan') },
+    ...(isSeller
+      ? [{ icon: 'box' as IconName, label: 'Listings', onPress: () => router.push(listingsHref) }]
+      : [
+          { icon: 'clipboard' as IconName, label: 'Jobs', onPress: () => router.push('/(tabs)/jobs') },
+          ...(role === 'garage' ? [{ icon: 'wrench' as IconName, label: 'Services', onPress: () => router.push(listingsHref) }] : []),
+        ]),
+    { icon: 'power', label: online ? 'Online' : 'Offline', onPress: () => setOnline(!online) },
+    { icon: 'user', label: 'Profile', onPress: () => router.push('/(tabs)/profile') },
+  ];
+
+  // Urgency alert (sale-banner pattern), only when there's something to act on.
+  const alert = isSeller
+    ? (lowStock.length > 0 ? { text: `${lowStock.length} item${lowStock.length === 1 ? '' : 's'} low on stock`, cta: 'Restock', onPress: () => router.push(listingsHref) } : null)
+    : (pending > 0 ? { text: `${pending} new request${pending === 1 ? '' : 's'} waiting`, cta: 'Review', onPress: () => router.push('/(tabs)/jobs') } : null);
 
   return (
     <Screen>
       <Header
         title={`Selam, ${firstName}`}
-        subtitle={role === 'seller' ? 'Parts seller' : role === 'mechanic' ? 'Mechanic' : 'Garage'}
+        subtitle={isSeller ? 'Parts seller' : role === 'mechanic' ? 'Mechanic' : 'Garage'}
         right={<Pressable onPress={() => router.push('/(tabs)/profile')}><Avatar name={profile?.full_name || 'Operator'} size="md" ring /></Pressable>}
       />
 
-      {/* Earnings — solid branded surface, like the main app */}
+      {/* Hero — earnings */}
       <View style={{ backgroundColor: colors.espresso, borderRadius: radius.xl, padding: 20, ...shadows.md }}>
         <Text style={{ fontSize: 13, fontWeight: '600', color: colors.onEspressoMuted }}>Earned today</Text>
         <Text style={{ fontSize: 34, fontWeight: '800', color: colors.onEspresso, marginTop: 4, letterSpacing: -0.5 }}>{formatETB(earn.today)}</Text>
@@ -72,47 +104,40 @@ export default function Dashboard() {
         </View>
       </View>
 
-      {/* Availability */}
-      <Card style={{ marginTop: 14 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 }}>
-          <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: online ? colors.successTint : colors.surface, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="power" size={19} color={online ? colors.success : colors.muted} strokeWidth={2.2} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14.5, fontWeight: '700', color: colors.ink }}>{onlineLabel}</Text>
-            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{online ? 'Customers can find you now.' : 'You’re hidden from customers.'}</Text>
-          </View>
-          <Toggle value={online} onValueChange={setOnline} />
-        </View>
-      </Card>
+      {/* Quick actions — category-nav pattern */}
+      <View style={{ flexDirection: 'row', marginTop: 20, paddingHorizontal: 4 }}>
+        {actions.map((a) => (
+          <QuickTile key={a.label} icon={a.icon} label={a.label} tint={a.label === 'Online' ? colors.successTint : a.label === 'Offline' ? colors.surface : colors.forestTint} onPress={a.onPress} />
+        ))}
+      </View>
 
-      {/* Scan */}
-      <Card variant="interactive" onPress={() => router.push('/scan')} style={{ marginTop: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 }}>
-          <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: colors.forestTint, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="search" size={19} color={colors.forest} strokeWidth={2} />
+      {/* Urgency alert — sale-banner pattern */}
+      {alert && (
+        <Pressable onPress={() => { haptics.tap(); alert.onPress(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.accentTint, borderRadius: radius.lg, padding: 14, marginTop: 20 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="bell" size={18} color={colors.onPrimary} strokeWidth={2} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14.5, fontWeight: '700', color: colors.ink }}>Scan a reservation</Text>
-            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>Check in a customer by their booking QR.</Text>
+          <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: colors.ink }}>{alert.text}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.forest }}>{alert.cta}</Text>
+            <Icon name="chevR" size={16} color={colors.forest} />
           </View>
-          <Icon name="chevR" size={18} color={colors.faint} />
-        </View>
-      </Card>
+        </Pressable>
+      )}
 
-      {/* Main list */}
+      {/* Featured list — today's schedule / low stock */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24, marginBottom: 4, paddingHorizontal: 4 }}>
         <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: colors.ink }}>
-          {role === 'seller' ? 'Low stock' : 'Today’s schedule'}
+          {isSeller ? 'Low stock' : 'Today’s schedule'}
         </Text>
-        <Pressable onPress={() => router.push(role === 'seller' ? '/(tabs)/listings' : '/(tabs)/jobs')}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.forest }}>{role === 'seller' ? 'Manage' : 'All jobs'}</Text>
+        <Pressable onPress={() => router.push(isSeller ? listingsHref : '/(tabs)/jobs')}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.forest }}>{isSeller ? 'Manage' : 'All jobs'}</Text>
         </Pressable>
       </View>
 
       <Card>
         <View style={{ paddingHorizontal: 16 }}>
-          {role === 'seller' ? (
+          {isSeller ? (
             lowStock.length === 0 ? (
               <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 18, textAlign: 'center' }}>Everything is well stocked.</Text>
             ) : lowStock.map((l, i) => (
