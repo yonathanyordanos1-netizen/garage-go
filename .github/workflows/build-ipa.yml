@@ -3,14 +3,15 @@ name: Build unsigned IPA for Sideloadly
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
 
 jobs:
   build:
+    name: build ${{ matrix.dir }}
     strategy:
       fail-fast: false
       matrix:
-        app:
+        include:
           - dir: garage-go-mobile
             artifact: garage-go-unsigned.ipa
           - dir: garage-go-owners
@@ -46,7 +47,6 @@ jobs:
         run: |
           WORKSPACE=$(basename "$(ls *.xcworkspace)" .xcworkspace)
           SCHEME=$(basename "$(ls *.xcodeproj)" .xcodeproj)
-          set -x
           xcodebuild -workspace "$WORKSPACE.xcworkspace" \
             -scheme "$SCHEME" \
             -configuration Release \
