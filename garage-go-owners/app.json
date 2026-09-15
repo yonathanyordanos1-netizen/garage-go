@@ -6,15 +6,29 @@
     "scheme": "garagegoowners",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#5C3A21"
+    },
+    "splash": {
+      "backgroundColor": "#5C3A21"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.garagego.owners"
+      "bundleIdentifier": "com.garagego.owners",
+      "icon": "./assets/icon.png"
     },
     "android": {
       "package": "com.garagego.owners",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#5C3A21"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -27,6 +41,13 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6f99a6c2-b8ca-4e81-b6e1-8fd218954c0a"
+      }
+    },
+    "owner": "yonathan-tech"
   }
 }

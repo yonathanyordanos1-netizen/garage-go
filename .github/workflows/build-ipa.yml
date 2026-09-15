@@ -1,0 +1,79 @@
+name: Build unsigned IPA for Sideloadly
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - dir: garage-go-mobile
+            artifact: garage-go-unsigned.ipa
+          - dir: garage-go-owners
+            artifact: garage-go-owners-unsigned.ipa
+    runs-on: macos-15
+    concurrency:
+      group: ipa-${{ matrix.dir }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: npm ci
+
+      - name: Prebuild native iOS project
+        working-directory: ${{ matrix.dir }}
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: ${{ matrix.dir }}/ios
+        run: pod install
+
+      - name: Build unsigned iOS app
+        working-directory: ${{ matrix.dir }}/ios
+        run: |
+          WORKSPACE=$(basename "$(ls *.xcworkspace)" .xcworkspace)
+          SCHEME=$(basename "$(ls *.xcodeproj)" .xcodeproj)
+          set -x
+          xcodebuild -workspace "$WORKSPACE.xcworkspace" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath ../build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        working-directory: ${{ matrix.dir }}
+        run: |
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -name '*.app' -maxdepth 1 | head -1)
+          echo "Found app bundle: $APP_PATH"
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -ry "${{ matrix.artifact }}" Payload/
+          ls -lh "${{ matrix.artifact }}"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.dir }}/${{ matrix.artifact }}
+          if-no-files-found: error

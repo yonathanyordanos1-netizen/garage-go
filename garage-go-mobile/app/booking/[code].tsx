@@ -19,7 +19,7 @@ export default function BookingDetail() {
   const { colors } = useTheme();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const ticketRef = useRef<ViewShot>(null);
+  const ticketRef = useRef<React.ComponentRef<typeof ViewShot>>(null);
   const [booking, setBooking] = useState<StoredBooking | null>(null);
   const [saving, setSaving] = useState(false);
 
