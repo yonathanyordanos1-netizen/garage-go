@@ -45,8 +45,8 @@ jobs:
       - name: Build unsigned iOS app
         working-directory: ${{ matrix.dir }}/ios
         run: |
-          WORKSPACE=$(basename "$(ls *.xcworkspace)" .xcworkspace)
-          SCHEME=$(basename "$(ls *.xcodeproj)" .xcodeproj)
+          WORKSPACE=$(basename "$(ls -d *.xcworkspace)" .xcworkspace)
+          SCHEME=$(basename "$(ls -d *.xcodeproj)" .xcodeproj)
           xcodebuild -workspace "$WORKSPACE.xcworkspace" \
             -scheme "$SCHEME" \
             -configuration Release \
