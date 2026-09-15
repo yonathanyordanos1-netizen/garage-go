@@ -1,4 +1,4 @@
-name: Build unsigned IPA for Sideloadly
+name: Build IPA + APK for sideloading (Sideloadly / direct APK)
 
 on:
   workflow_dispatch:
@@ -14,8 +14,10 @@ jobs:
         include:
           - dir: garage-go-mobile
             artifact: garage-go-unsigned.ipa
+            apk: garage-go-unsigned.apk
           - dir: garage-go-owners
             artifact: garage-go-owners-unsigned.ipa
+            apk: garage-go-owners-unsigned.apk
     runs-on: macos-26
     concurrency:
       group: ipa-${{ matrix.dir }}
@@ -74,4 +76,24 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.dir }}/${{ matrix.artifact }}
+          if-no-files-found: error
+
+      - name: Prebuild native Android project
+        working-directory: ${{ matrix.dir }}
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build unsigned/self-signed APK
+        working-directory: ${{ matrix.dir }}/android
+        run: |
+          ./gradlew assembleRelease
+          APK=$(find app/build/outputs/apk -name '*.apk' | head -1)
+          echo "APK=$APK"
+          cp "$APK" "../${{ matrix.apk }}"
+          ls -lh "../${{ matrix.apk }}"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.apk }}
+          path: ${{ matrix.dir }}/${{ matrix.apk }}
           if-no-files-found: error
