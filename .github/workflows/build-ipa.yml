@@ -16,7 +16,7 @@ jobs:
             artifact: garage-go-unsigned.ipa
           - dir: garage-go-owners
             artifact: garage-go-owners-unsigned.ipa
-    runs-on: macos-15
+    runs-on: macos-26
     concurrency:
       group: ipa-${{ matrix.dir }}
       cancel-in-progress: false
